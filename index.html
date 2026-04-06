@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PT 운동 일지</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        background: #f0f4f8;
+        min-height: 100vh;
+      }
+      header {
+        background: #2d6a4f;
+        color: white;
+        padding: 16px 24px;
+        font-size: 20px;
+        font-weight: bold;
+        text-align: center;
+      }
+      .container {
+        max-width: 480px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      .card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 16px;
+      }
+      .card h2 {
+        font-size: 16px;
+        color: #333;
+        margin-bottom: 16px;
+      }
+      .tutor-list button {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        margin-bottom: 10px;
+        background: #2d6a4f;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .tutor-list button:hover {
+        background: #1b4332;
+      }
+      .member-list button {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        color: #333;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        text-align: left;
+      }
+      .member-list button:hover {
+        background: #e9ecef;
+      }
+      .back-btn {
+        background: none;
+        border: none;
+        color: #2d6a4f;
+        font-size: 15px;
+        cursor: pointer;
+        margin-bottom: 16px;
+        padding: 0;
+      }
+      .selected-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2d6a4f;
+        margin-bottom: 4px;
+      }
+      .sub-text {
+        font-size: 13px;
+        color: #888;
+        margin-bottom: 16px;
+      }
+      .add-member-btn {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        background: white;
+        color: #2d6a4f;
+        border: 2px dashed #2d6a4f;
+        border-radius: 10px;
+        font-size: 15px;
+        cursor: pointer;
+        margin-top: 4px;
+      }
+      .member-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .member-row button.name-btn {
+        flex: 1;
+        padding: 14px;
+        background: #f8f9fa;
+        color: #333;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        text-align: left;
+        margin-bottom: 0;
+      }
+      .member-row button.name-btn:hover {
+        background: #e9ecef;
+      }
+      .member-row button.del-member-btn {
+        padding: 10px 12px;
+        background: none;
+        color: #ccc;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-bottom: 0;
+        width: auto;
+      }
+      .member-row button.del-member-btn:hover {
+        color: #e74c3c;
+        border-color: #e74c3c;
+      }
+      .exercise-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        gap: 6px;
+        margin-bottom: 10px;
+        align-items: center;
+      }
+      .exercise-row input {
+        padding: 10px 8px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 14px;
+        width: 100%;
+      }
+      .exercise-row input:focus {
+        outline: none;
+        border-color: #2d6a4f;
+      }
+      .delete-btn {
+        background: none;
+        border: none;
+        color: #ccc;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 4px;
+      }
+      .delete-btn:hover {
+        color: #e74c3c;
+      }
+      .col-label {
+        font-size: 11px;
+        color: #aaa;
+        text-align: center;
+        margin-bottom: 4px;
+      }
+      .col-headers {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        gap: 6px;
+        margin-bottom: 4px;
+      }
+      .add-exercise-btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: #f0f4f8;
+        color: #2d6a4f;
+        border: 1px dashed #2d6a4f;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        margin-top: 8px;
+      }
+      .save-btn {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        background: #2d6a4f;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 17px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 8px;
+      }
+      .save-btn:hover {
+        background: #1b4332;
+      }
+      .date-text {
+        font-size: 13px;
+        color: #888;
+        margin-bottom: 16px;
+      }
+      .voice-section {
+        background: #f0f9f4;
+        border: 1px solid #b7e4c7;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        text-align: center;
+      }
+      .voice-section p {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 12px;
+      }
+      .mic-btn {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #2d6a4f;
+        color: white;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        margin-bottom: 8px;
+        transition: background 0.2s;
+      }
+      .mic-btn.listening {
+        background: #e63946;
+        animation: pulse 1s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 12px rgba(230, 57, 70, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(230, 57, 70, 0);
+        }
+      }
+      .voice-status {
+        font-size: 13px;
+        color: #888;
+        min-height: 20px;
+      }
+      .voice-status.active {
+        color: #e63946;
+        font-weight: bold;
+      }
+      .result-box {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        font-size: 15px;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        color: #333;
+        margin-bottom: 16px;
+        border: 1px solid #e9ecef;
+      }
+      .copy-btn {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        background: #2d6a4f;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 17px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-bottom: 10px;
+      }
+      .copy-btn:hover {
+        background: #1b4332;
+      }
+      .copy-btn.copied {
+        background: #40916c;
+      }
+      .another-btn {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        background: white;
+        color: #2d6a4f;
+        border: 2px solid #2d6a4f;
+        border-radius: 12px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      #member-screen,
+      #exercise-screen,
+      #result-screen {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>💪 PT 운동 일지</header>
+
+    <!-- 1. 튜터 선택 -->
+    <div class="container" id="tutor-screen">
+      <div class="card">
+        <h2>튜터를 선택하세요</h2>
+        <div class="tutor-list">
+          <button onclick="selectTutor('이순재')">이순재 튜터</button>
+          <button onclick="selectTutor('박재우')">박재우 튜터</button>
+          <button onclick="selectTutor('이승일')">이승일 튜터</button>
+          <button onclick="selectTutor('이종민')">이종민 튜터</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 회원 목록 -->
+    <div class="container" id="member-screen">
+      <button class="back-btn" onclick="showScreen('tutor')">
+        ← 튜터 선택으로 돌아가기
+      </button>
+      <div class="card">
+        <div class="selected-title" id="tutor-name-display"></div>
+        <p class="sub-text">담당 회원 목록</p>
+        <div class="member-list" id="member-list"></div>
+        <button class="add-member-btn" onclick="addMember()">
+          + 회원 추가
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. 운동 기록 입력 -->
+    <div class="container" id="exercise-screen">
+      <button class="back-btn" onclick="showScreen('member')">
+        ← 회원 목록으로 돌아가기
+      </button>
+      <div class="card">
+        <div class="selected-title" id="member-name-display"></div>
+        <p class="date-text" id="today-date"></p>
+        <div class="voice-section">
+          <p>
+            🎤 마이크 버튼을 누르고 운동을 말해보세요<br />
+            <span style="color: #aaa">예) "스쿼트 60킬로 3세트 12회"</span>
+          </p>
+          <button class="mic-btn" id="mic-btn" onclick="toggleVoice()">
+            🎤
+          </button>
+          <div class="voice-status" id="voice-status">
+            버튼을 눌러 음성 입력 시작
+          </div>
+        </div>
+        <div class="col-headers">
+          <div class="col-label">운동 이름</div>
+          <div class="col-label">중량(kg)</div>
+          <div class="col-label">세트</div>
+          <div class="col-label">횟수</div>
+          <div class="col-label"></div>
+        </div>
+        <div id="exercise-list"></div>
+        <button class="add-exercise-btn" onclick="addExerciseRow()">
+          + 운동 직접 추가
+        </button>
+      </div>
+      <button class="save-btn" onclick="saveRecord()">
+        ✅ 오늘 일지 완성하기
+      </button>
+    </div>
+
+    <!-- 4. 결과 화면 -->
+    <div class="container" id="result-screen">
+      <button class="back-btn" onclick="showScreen('exercise')">
+        ← 수정하러 돌아가기
+      </button>
+      <div class="card">
+        <h2>📋 완성된 운동 일지</h2>
+        <div class="result-box" id="result-text"></div>
+        <button class="copy-btn" id="copy-btn" onclick="copyResult()">
+          📋 복사하기 (밴드/카톡에 붙여넣기)
+        </button>
+        <button class="another-btn" onclick="showScreen('tutor')">
+          🏠 처음으로 돌아가기
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // ── 데이터: LocalStorage에서 불러오기 ──────────
+      const DEFAULT_MEMBERS = {
+        이순재: [],
+        박재우: [],
+        이승일: [],
+        이종민: [],
+      };
+
+      function loadMembers() {
+        const saved = localStorage.getItem('pt-members');
+        if (saved) {
+          try {
+            return JSON.parse(saved);
+          } catch (e) {
+            return DEFAULT_MEMBERS;
+          }
+        }
+        return DEFAULT_MEMBERS;
+      }
+
+      function saveMembers() {
+        localStorage.setItem('pt-members', JSON.stringify(members));
+      }
+
+      let members = loadMembers();
+      let currentTutor = '';
+      let currentMember = '';
+      let currentDateStr = '';
+      let lastResult = '';
+      let recognition = null;
+      let isListening = false;
+
+      // ── 화면 전환 ──────────────────────────────────
+      function showScreen(name) {
+        [
+          'tutor-screen',
+          'member-screen',
+          'exercise-screen',
+          'result-screen',
+        ].forEach((id) => {
+          document.getElementById(id).style.display = 'none';
+        });
+        document.getElementById(name + '-screen').style.display = 'block';
+      }
+
+      // ── 튜터 선택 ──────────────────────────────────
+      function selectTutor(name) {
+        currentTutor = name;
+        document.getElementById('tutor-name-display').textContent =
+          name + ' 튜터';
+        renderMembers();
+        showScreen('member');
+      }
+
+      // ── 회원 목록 렌더링 ───────────────────────────
+      function renderMembers() {
+        const list = document.getElementById('member-list');
+        list.innerHTML = '';
+        const myMembers = members[currentTutor] || [];
+        if (myMembers.length === 0) {
+          list.innerHTML =
+            '<p style="color:#aaa;font-size:14px;margin-bottom:12px;">아직 등록된 회원이 없어요</p>';
+          return;
+        }
+        myMembers.forEach((name, idx) => {
+          const row = document.createElement('div');
+          row.className = 'member-row';
+
+          const nameBtn = document.createElement('button');
+          nameBtn.className = 'name-btn';
+          nameBtn.textContent = name;
+          nameBtn.onclick = () => selectMember(name);
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'del-member-btn';
+          delBtn.textContent = '✕';
+          delBtn.onclick = () => deleteMember(idx);
+
+          row.appendChild(nameBtn);
+          row.appendChild(delBtn);
+          list.appendChild(row);
+        });
+      }
+
+      // ── 회원 추가 ──────────────────────────────────
+      function addMember() {
+        const name = prompt('새 회원 이름을 입력하세요:');
+        if (name && name.trim()) {
+          if (!members[currentTutor]) members[currentTutor] = [];
+          members[currentTutor].push(name.trim());
+          saveMembers();
+          renderMembers();
+        }
+      }
+
+      // ── 회원 삭제 ──────────────────────────────────
+      function deleteMember(idx) {
+        const name = members[currentTutor][idx];
+        if (confirm(name + ' 회원을 삭제할까요?')) {
+          members[currentTutor].splice(idx, 1);
+          saveMembers();
+          renderMembers();
+        }
+      }
+
+      // ── 회원 선택 → 운동 입력 화면 ────────────────
+      function selectMember(name) {
+        currentMember = name;
+        document.getElementById('member-name-display').textContent =
+          name + ' 회원';
+        const today = new Date();
+        currentDateStr =
+          today.getFullYear() +
+          '년 ' +
+          (today.getMonth() + 1) +
+          '월 ' +
+          today.getDate() +
+          '일';
+        document.getElementById('today-date').textContent =
+          currentDateStr + ' 운동 기록';
+        document.getElementById('exercise-list').innerHTML = '';
+        addExerciseRow();
+        showScreen('exercise');
+      }
+
+      // ── 운동 행 추가 ───────────────────────────────
+      function addExerciseRow(name = '', weight = '', sets = '', reps = '') {
+        const row = document.createElement('div');
+        row.className = 'exercise-row';
+        row.innerHTML = `
+      <input type="text" placeholder="예) 스쿼트" value="${name}" />
+      <input type="number" placeholder="60" min="0" value="${weight}" />
+      <input type="number" placeholder="3" min="1" value="${sets}" />
+      <input type="number" placeholder="10" min="1" value="${reps}" />
+      <button class="delete-btn" onclick="this.parentElement.remove()">✕</button>
+    `;
+        document.getElementById('exercise-list').appendChild(row);
+      }
+
+      // ── 음성 인식 ──────────────────────────────────
+      function toggleVoice() {
+        isListening ? stopVoice() : startVoice();
+      }
+
+      function startVoice() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+          alert('Chrome 브라우저를 사용해 주세요!');
+          return;
+        }
+        recognition = new SR();
+        recognition.lang = 'ko-KR';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.onstart = () => {
+          isListening = true;
+          document.getElementById('mic-btn').classList.add('listening');
+          document.getElementById('mic-btn').textContent = '⏹';
+          document.getElementById('voice-status').textContent =
+            '🔴 듣고 있어요... 운동을 말해보세요!';
+          document.getElementById('voice-status').classList.add('active');
+        };
+        recognition.onresult = (e) => {
+          const transcript = e.results[0][0].transcript;
+          document.getElementById('voice-status').textContent =
+            '인식됨: "' + transcript + '"';
+          parseVoiceInput(transcript);
+        };
+        recognition.onerror = () => {
+          stopVoice();
+          document.getElementById('voice-status').textContent =
+            '❌ 인식 실패. 다시 눌러보세요!';
+        };
+        recognition.onend = () => stopVoice();
+        recognition.start();
+      }
+
+      function stopVoice() {
+        isListening = false;
+        if (recognition) recognition.stop();
+        document.getElementById('mic-btn').classList.remove('listening');
+        document.getElementById('mic-btn').textContent = '🎤';
+        document.getElementById('voice-status').classList.remove('active');
+      }
+
+      function parseVoiceInput(text) {
+        const numMap = {
+          영: 0,
+          일: 1,
+          이: 2,
+          삼: 3,
+          사: 4,
+          오: 5,
+          육: 6,
+          칠: 7,
+          팔: 8,
+          구: 9,
+          십: 10,
+          이십: 20,
+          삼십: 30,
+          사십: 40,
+          오십: 50,
+          육십: 60,
+          칠십: 70,
+          팔십: 80,
+          구십: 90,
+          백: 100,
+          백오십: 150,
+          이백: 200,
+        };
+        let t = text;
+        Object.keys(numMap)
+          .sort((a, b) => b.length - a.length)
+          .forEach((k) => {
+            t = t.replace(new RegExp(k, 'g'), numMap[k]);
+          });
+        t = t.replace(/킬로그램|킬로|키로그램|키로/g, '');
+        const nums = t.match(/\d+/g) || [];
+        let exName = t
+          .replace(/\d+/g, '')
+          .replace(/세트|회|번|번씩|개|kg|킬|키/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        const weight = nums[0] || '';
+        const sets = nums[1] || '';
+        const reps = nums[2] || '';
+        if (exName || weight) {
+          const rows = document.querySelectorAll('.exercise-row');
+          const lastRow = rows[rows.length - 1];
+          const lastInputs = lastRow ? lastRow.querySelectorAll('input') : null;
+          if (lastInputs && !lastInputs[0].value.trim()) {
+            lastInputs[0].value = exName;
+            lastInputs[1].value = weight;
+            lastInputs[2].value = sets;
+            lastInputs[3].value = reps;
+          } else {
+            addExerciseRow(exName, weight, sets, reps);
+          }
+          document.getElementById('voice-status').textContent =
+            '✅ 입력 완료! 확인 후 수정하세요.';
+        }
+      }
+
+      // ── 저장 & 결과 ────────────────────────────────
+      function saveRecord() {
+        const rows = document.querySelectorAll('.exercise-row');
+        const exercises = [];
+        rows.forEach((row) => {
+          const inputs = row.querySelectorAll('input');
+          const name = inputs[0].value.trim();
+          const weight = inputs[1].value.trim();
+          const sets = inputs[2].value.trim();
+          const reps = inputs[3].value.trim();
+          if (name) exercises.push({ name, weight, sets, reps });
+        });
+        if (exercises.length === 0) {
+          alert('운동을 최소 1개 이상 입력해주세요!');
+          return;
+        }
+        let result = '';
+        result += '📋 ' + currentMember + ' 회원 운동 일지\n';
+        result += '📅 ' + currentDateStr + '\n';
+        result += '👤 담당 튜터: ' + currentTutor + '\n';
+        result += '─────────────────\n';
+        exercises.forEach((ex, i) => {
+          let line = i + 1 + '. ' + ex.name;
+          if (ex.weight) line += '  ' + ex.weight + 'kg';
+          if (ex.sets) line += ' / ' + ex.sets + '세트';
+          if (ex.reps) line += ' / ' + ex.reps + '회';
+          result += line + '\n';
+        });
+        result += '─────────────────\n';
+        result += '✅ 오늘도 수고하셨습니다! 💪';
+        lastResult = result;
+        document.getElementById('result-text').textContent = result;
+        const copyBtn = document.getElementById('copy-btn');
+        copyBtn.textContent = '📋 복사하기 (밴드/카톡에 붙여넣기)';
+        copyBtn.classList.remove('copied');
+        showScreen('result');
+      }
+
+      function copyResult() {
+        navigator.clipboard
+          .writeText(lastResult)
+          .then(() => {
+            const btn = document.getElementById('copy-btn');
+            btn.textContent = '✅ 복사 완료! 이제 밴드/카톡에 붙여넣으세요';
+            btn.classList.add('copied');
+          })
+          .catch(() => {
+            const el = document.createElement('textarea');
+            el.value = lastResult;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            const btn = document.getElementById('copy-btn');
+            btn.textContent = '✅ 복사 완료! 이제 밴드/카톡에 붙여넣으세요';
+            btn.classList.add('copied');
+          });
+      }
+    </script>
+  </body>
+</html>
