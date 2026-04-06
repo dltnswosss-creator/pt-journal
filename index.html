@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PT 운동 일지</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
       * {
         box-sizing: border-box;
@@ -139,14 +140,11 @@
         color: #e74c3c;
         border-color: #e74c3c;
       }
-
-      /* 날짜 선택 */
       .date-selector {
         display: flex;
         align-items: center;
         gap: 10px;
         margin-bottom: 16px;
-        flex-wrap: wrap;
       }
       .date-display {
         font-size: 14px;
@@ -163,11 +161,6 @@
         font-size: 13px;
         cursor: pointer;
       }
-      .date-change-btn:hover {
-        background: #d1e7dd;
-      }
-
-      /* 캘린더 */
       .calendar-wrap {
         display: none;
         margin-bottom: 16px;
@@ -250,8 +243,6 @@
       .cal-day.selected.sat {
         color: white;
       }
-
-      /* 탭 */
       .tab-bar {
         display: flex;
         border-bottom: 2px solid #e9ecef;
@@ -268,14 +259,10 @@
         cursor: pointer;
         border-bottom: 3px solid transparent;
         margin-bottom: -2px;
-        transition: all 0.2s;
       }
       .tab-btn.active {
         color: #2d6a4f;
         border-bottom-color: #2d6a4f;
-      }
-      .tab-btn:hover {
-        color: #2d6a4f;
       }
       .section-badge {
         display: inline-block;
@@ -302,7 +289,6 @@
         grid-template-columns: 2fr 1fr 1fr 1fr auto;
         gap: 6px;
         margin-bottom: 4px;
-        align-items: center;
       }
       .col-label {
         font-size: 11px;
@@ -313,8 +299,8 @@
         display: grid;
         grid-template-columns: 2fr 1fr 1fr 1fr auto;
         gap: 6px;
-        margin-bottom: 10px;
-        align-items: center;
+        margin-bottom: 6px;
+        align-items: start;
       }
       .exercise-row input {
         padding: 10px 8px;
@@ -329,8 +315,6 @@
       }
       .reps-wrap {
         display: flex;
-        gap: 0;
-        align-items: center;
       }
       .reps-wrap input {
         flex: 1;
@@ -355,7 +339,6 @@
         font-size: 11px;
         font-weight: bold;
         cursor: pointer;
-        white-space: nowrap;
         min-width: 28px;
         text-align: center;
       }
@@ -373,6 +356,43 @@
       .delete-btn:hover {
         color: #e74c3c;
       }
+      .exercise-hint {
+        grid-column: 1 / -1;
+        background: #fffbea;
+        border: 1px solid #ffe066;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 13px;
+        color: #555;
+        line-height: 1.6;
+        display: none;
+      }
+      .exercise-hint.show {
+        display: block;
+      }
+      .hint-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .hint-title {
+        font-size: 12px;
+        font-weight: bold;
+        color: #856404;
+      }
+      .hint-use-btn {
+        padding: 4px 10px;
+        background: #2d6a4f;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .hint-text {
+        white-space: pre-wrap;
+      }
       .add-exercise-btn {
         display: block;
         width: 100%;
@@ -385,6 +405,32 @@
         cursor: pointer;
         margin-top: 4px;
       }
+      .feedback-wrap {
+        margin-top: 16px;
+      }
+      .feedback-label {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .feedback-mic-btn {
+        padding: 5px 10px;
+        background: #f0f9f4;
+        color: #2d6a4f;
+        border: 1px solid #b7e4c7;
+        border-radius: 8px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .feedback-mic-btn.listening {
+        background: #fde8ea;
+        color: #e63946;
+        border-color: #f5a3aa;
+        animation: pulse 1s infinite;
+      }
       .feedback-input {
         display: block;
         width: 100%;
@@ -393,8 +439,7 @@
         border-radius: 10px;
         font-size: 14px;
         resize: none;
-        height: 72px;
-        margin-top: 16px;
+        height: 80px;
         font-family: inherit;
       }
       .feedback-input:focus {
@@ -506,9 +551,296 @@
         font-size: 16px;
         cursor: pointer;
       }
+      .db-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .db-add-btn {
+        padding: 8px 14px;
+        background: #2d6a4f;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .db-item {
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+      }
+      .db-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .db-item-name {
+        font-size: 15px;
+        font-weight: bold;
+        color: #2d6a4f;
+      }
+      .db-item-btns {
+        display: flex;
+        gap: 6px;
+      }
+      .db-edit-btn {
+        padding: 4px 10px;
+        background: #f0f9f4;
+        color: #2d6a4f;
+        border: 1px solid #b7e4c7;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .db-del-btn {
+        padding: 4px 10px;
+        background: none;
+        color: #ccc;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .db-del-btn:hover {
+        color: #e74c3c;
+        border-color: #e74c3c;
+      }
+      .db-item-method {
+        font-size: 13px;
+        color: #666;
+        margin-top: 8px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
+      .growth-filters {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .growth-filters select {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 14px;
+        min-width: 100px;
+      }
+      .chart-wrap {
+        position: relative;
+        height: 220px;
+        margin-bottom: 16px;
+      }
+      .growth-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .growth-table th {
+        background: #f0f9f4;
+        color: #2d6a4f;
+        padding: 8px;
+        text-align: center;
+        border-bottom: 2px solid #b7e4c7;
+      }
+      .growth-table td {
+        padding: 8px;
+        text-align: center;
+        border-bottom: 1px solid #f0f4f8;
+      }
+      .growth-table tr:hover td {
+        background: #f8f9fa;
+      }
+
+      /* 대시보드 */
+      .dash-tutor-card {
+        background: white;
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e9ecef;
+      }
+      .dash-tutor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .dash-tutor-name {
+        font-size: 17px;
+        font-weight: bold;
+        color: #2d6a4f;
+      }
+      .dash-change {
+        font-size: 13px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-weight: bold;
+      }
+      .dash-change.up {
+        background: #d1e7dd;
+        color: #0a3622;
+      }
+      .dash-change.down {
+        background: #fde8ea;
+        color: #842029;
+      }
+      .dash-change.same {
+        background: #f0f4f8;
+        color: #666;
+      }
+      .dash-count-wrap {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .dash-count-item {
+        text-align: center;
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 10px 4px;
+      }
+      .dash-count-num {
+        font-size: 26px;
+        font-weight: bold;
+        color: #2d6a4f;
+      }
+      .dash-count-label {
+        font-size: 11px;
+        color: #888;
+        margin-top: 2px;
+      }
+      .dash-diff-num {
+        font-size: 26px;
+        font-weight: bold;
+      }
+      .dash-diff-num.up {
+        color: #2d6a4f;
+      }
+      .dash-diff-num.down {
+        color: #e74c3c;
+      }
+      .dash-diff-num.same {
+        color: #888;
+      }
+      .dash-member-list {
+        font-size: 13px;
+        color: #666;
+        line-height: 1.8;
+        border-top: 1px solid #f0f4f8;
+        padding-top: 10px;
+      }
+
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-overlay.open {
+        display: flex;
+      }
+      .modal {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        width: 90%;
+        max-width: 440px;
+      }
+      .modal h3 {
+        font-size: 16px;
+        color: #333;
+        margin-bottom: 16px;
+      }
+      .modal input,
+      .modal textarea {
+        display: block;
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        margin-bottom: 10px;
+      }
+      .modal input:focus,
+      .modal textarea:focus {
+        outline: none;
+        border-color: #2d6a4f;
+      }
+      .modal textarea {
+        resize: none;
+        height: 120px;
+      }
+      .modal-btns {
+        display: flex;
+        gap: 8px;
+      }
+      .modal-save-btn {
+        flex: 1;
+        padding: 12px;
+        background: #2d6a4f;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      .modal-cancel-btn {
+        padding: 12px 16px;
+        background: #f8f9fa;
+        color: #555;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #dee2e6;
+        display: flex;
+        z-index: 50;
+      }
+      .nav-btn {
+        flex: 1;
+        padding: 10px 4px 8px;
+        background: none;
+        border: none;
+        font-size: 10px;
+        color: #aaa;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+      .nav-btn .nav-icon {
+        font-size: 18px;
+      }
+      .nav-btn.active {
+        color: #2d6a4f;
+      }
+      body {
+        padding-bottom: 64px;
+      }
       #member-screen,
       #exercise-screen,
-      #result-screen {
+      #result-screen,
+      #db-screen,
+      #growth-screen,
+      #dashboard-screen {
         display: none;
       }
       .tab-panel {
@@ -516,6 +848,18 @@
       }
       .tab-panel.active {
         display: block;
+      }
+      .empty-msg {
+        text-align: center;
+        color: #aaa;
+        font-size: 14px;
+        padding: 24px 0;
+      }
+      .loading-msg {
+        text-align: center;
+        color: #aaa;
+        font-size: 14px;
+        padding: 20px 0;
       }
     </style>
   </head>
@@ -555,11 +899,8 @@
       <button class="back-btn" onclick="showScreen('member')">
         ← 회원 목록으로 돌아가기
       </button>
-
       <div class="card">
         <div class="selected-title" id="member-name-display"></div>
-
-        <!-- 날짜 선택 -->
         <div class="date-selector">
           <div class="date-display" id="date-display"></div>
           <button class="date-change-btn" onclick="toggleCalendar()">
@@ -574,11 +915,12 @@
           </div>
           <div class="cal-grid" id="cal-grid"></div>
         </div>
-
         <div class="voice-section">
           <p>
-            🎤 마이크 버튼을 누르고 운동을 말해보세요<br />
-            <span style="color: #aaa">예) "스쿼트 60킬로 3세트 12회"</span>
+            🎤 마이크 버튼을 누르고 운동을 말해보세요<br /><span
+              style="color: #aaa"
+              >예) "스쿼트 60킬로 3세트 12회"</span
+            >
           </p>
           <button class="mic-btn" id="mic-btn" onclick="toggleVoice()">
             🎤
@@ -588,7 +930,6 @@
           </div>
         </div>
       </div>
-
       <div class="card">
         <div class="tab-bar">
           <button
@@ -609,8 +950,6 @@
             ❄️ Cool down
           </button>
         </div>
-
-        <!-- Warm up -->
         <div class="tab-panel active" id="panel-warmup">
           <span class="section-badge badge-warmup">🔥 Warm up</span>
           <div class="col-headers">
@@ -625,8 +964,6 @@
             + 운동 추가
           </button>
         </div>
-
-        <!-- Main workout -->
         <div class="tab-panel" id="panel-main">
           <span class="section-badge badge-main">💪 Main workout</span>
           <div class="col-headers">
@@ -641,8 +978,6 @@
             + 운동 추가
           </button>
         </div>
-
-        <!-- Cool down -->
         <div class="tab-panel" id="panel-cooldown">
           <span class="section-badge badge-cooldown">❄️ Cool down</span>
           <p style="font-size: 12px; color: #aaa; margin-bottom: 12px">
@@ -660,14 +995,24 @@
             + 운동 추가
           </button>
         </div>
-
-        <textarea
-          class="feedback-input"
-          id="feedback-msg"
-          placeholder="마무리 멘트 (예: 오늘도 수고하셨습니다! 💪)"
-        ></textarea>
+        <div class="feedback-wrap">
+          <div class="feedback-label">
+            <span>✏️ 마무리 멘트</span>
+            <button
+              class="feedback-mic-btn"
+              id="feedback-mic-btn"
+              onclick="toggleFeedbackVoice()"
+            >
+              🎤 음성 입력
+            </button>
+          </div>
+          <textarea
+            class="feedback-input"
+            id="feedback-msg"
+            placeholder="마무리 멘트를 입력하거나 음성으로 말해보세요"
+          ></textarea>
+        </div>
       </div>
-
       <button class="save-btn" onclick="saveRecord()">
         ✅ 오늘 일지 완성하기
       </button>
@@ -690,42 +1035,232 @@
       </div>
     </div>
 
-    <script>
+    <!-- 5. 운동 DB -->
+    <div class="container" id="db-screen">
+      <div class="card">
+        <div class="db-header">
+          <h2>📚 운동 DB</h2>
+          <button class="db-add-btn" onclick="openModal()">+ 운동 추가</button>
+        </div>
+        <p style="font-size: 13px; color: #aaa; margin-bottom: 16px">
+          운동 방법을 저장해두면 일지 작성 시 자동으로 불러와요
+        </p>
+        <div id="db-list"></div>
+      </div>
+    </div>
+
+    <!-- 6. 성장 기록 -->
+    <div class="container" id="growth-screen">
+      <div class="card">
+        <h2>📈 회원 성장 기록</h2>
+        <div class="growth-filters">
+          <select id="growth-member" onchange="onGrowthMemberChange()">
+            <option value="">회원 선택</option>
+          </select>
+          <select id="growth-exercise" onchange="loadGrowthData()">
+            <option value="">운동 선택</option>
+          </select>
+          <select id="growth-period" onchange="loadGrowthData()">
+            <option value="all">전체</option>
+            <option value="week">주간</option>
+            <option value="month" selected>월간</option>
+            <option value="year">연간</option>
+          </select>
+        </div>
+        <div id="growth-content">
+          <p class="empty-msg">회원과 운동을 선택하면 기록이 나타나요</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. 대시보드 -->
+    <div class="container" id="dashboard-screen">
+      <div class="card">
+        <h2>📊 튜터별 대시보드</h2>
+        <p style="font-size: 13px; color: #aaa; margin-bottom: 16px">
+          매월 1일 기준으로 회원 수가 자동 기록돼요
+        </p>
+        <div id="dashboard-content">
+          <p class="loading-msg">불러오는 중...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 모달 -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal">
+        <h3 id="modal-title">운동 추가</h3>
+        <input
+          type="text"
+          id="modal-name"
+          placeholder="운동 이름 (예: 바벨 백 스쿼트)"
+        />
+        <textarea
+          id="modal-method"
+          placeholder="운동 방법 / 코칭 포인트&#10;예) 발 어깨너비로 벌리기&#10;무릎이 발끝을 넘지 않도록"
+        ></textarea>
+        <div class="modal-btns">
+          <button class="modal-cancel-btn" onclick="closeModal()">취소</button>
+          <button class="modal-save-btn" onclick="saveExerciseDB()">
+            저장
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 네비 -->
+    <div class="bottom-nav">
+      <button class="nav-btn active" id="nav-home" onclick="navTo('home')">
+        <span class="nav-icon">🏠</span><span>홈</span>
+      </button>
+      <button class="nav-btn" id="nav-growth" onclick="navTo('growth')">
+        <span class="nav-icon">📈</span><span>성장</span>
+      </button>
+      <button class="nav-btn" id="nav-dashboard" onclick="navTo('dashboard')">
+        <span class="nav-icon">📊</span><span>대시보드</span>
+      </button>
+      <button class="nav-btn" id="nav-db" onclick="navTo('db')">
+        <span class="nav-icon">📚</span><span>운동DB</span>
+      </button>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        getDocs,
+        doc,
+        setDoc,
+        getDoc,
+        query,
+        where,
+        orderBy,
+      } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: 'AIzaSyBmnmT2Lf3WZbdT-BW4H3mu6_q3GGeJaTk',
+        authDomain: 'bodytutorial-9a0f2.firebaseapp.com',
+        projectId: 'bodytutorial-9a0f2',
+        storageBucket: 'bodytutorial-9a0f2.firebasestorage.app',
+        messagingSenderId: '194773962037',
+        appId: '1:194773962037:web:252f8ccf5b9e30293c907c',
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      const TUTORS = ['이순재', '박재우', '이승일', '이종민'];
       const DEFAULT_MEMBERS = {
         이순재: [],
         박재우: [],
         이승일: [],
         이종민: [],
       };
+
       function loadMembers() {
-        const saved = localStorage.getItem('pt-members');
-        if (saved) {
+        const s = localStorage.getItem('pt-members');
+        if (s) {
           try {
-            return JSON.parse(saved);
-          } catch (e) {
-            return DEFAULT_MEMBERS;
-          }
+            return JSON.parse(s);
+          } catch (e) {}
         }
         return DEFAULT_MEMBERS;
       }
       function saveMembers() {
         localStorage.setItem('pt-members', JSON.stringify(members));
       }
+      function loadExerciseDB() {
+        const s = localStorage.getItem('pt-exercise-db');
+        if (s) {
+          try {
+            return JSON.parse(s);
+          } catch (e) {}
+        }
+        return [];
+      }
+      function saveExerciseDB_store() {
+        localStorage.setItem('pt-exercise-db', JSON.stringify(exerciseDB));
+      }
 
       let members = loadMembers();
-      let currentTutor = '';
-      let currentMember = '';
-      let currentDateStr = '';
-      let lastResult = '';
-      let recognition = null;
-      let isListening = false;
-      let currentTab = 'warmup';
+      let exerciseDB = loadExerciseDB();
+      let editingIdx = -1;
+      let currentTutor = '',
+        currentMember = '',
+        currentDateStr = '',
+        lastResult = '';
+      let recognition = null,
+        isListening = false,
+        currentTab = 'warmup';
+      let feedbackRecognition = null,
+        isFeedbackListening = false;
+      let selectedDate = new Date(),
+        calViewYear = new Date().getFullYear(),
+        calViewMonth = new Date().getMonth();
+      let growthChartWeight = null,
+        growthChartReps = null;
 
-      // ── 날짜 관련 ─────────────────────────────────
-      let selectedDate = new Date();
-      let calViewYear = selectedDate.getFullYear();
-      let calViewMonth = selectedDate.getMonth();
+      // ── 회원 수 스냅샷 저장 ────────────────────────
+      // 회원이 추가/삭제될 때마다 이번달 스냅샷을 업데이트
+      async function saveMemberSnapshot() {
+        const now = new Date();
+        const ym =
+          now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        for (const tutor of TUTORS) {
+          const count = (members[tutor] || []).length;
+          try {
+            // 문서 ID를 "튜터명_년월" 로 고정해서 덮어쓰기 (upsert)
+            await setDoc(doc(db, 'member_snapshots', tutor + '_' + ym), {
+              tutor,
+              yearMonth: ym,
+              count,
+              updatedAt: new Date().toISOString(),
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
 
+      // ── 네비 ────────────────────────────────────
+      window.navTo = function (page) {
+        ['home', 'growth', 'dashboard', 'db'].forEach((p) =>
+          document.getElementById('nav-' + p)?.classList.remove('active')
+        );
+        document.getElementById('nav-' + page)?.classList.add('active');
+        if (page === 'home') showScreen('tutor');
+        if (page === 'db') {
+          renderDB();
+          showScreen('db');
+        }
+        if (page === 'growth') {
+          loadMemberOptions();
+          showScreen('growth');
+        }
+        if (page === 'dashboard') {
+          loadDashboard();
+          showScreen('dashboard');
+        }
+      };
+
+      window.showScreen = function (name) {
+        [
+          'tutor-screen',
+          'member-screen',
+          'exercise-screen',
+          'result-screen',
+          'db-screen',
+          'growth-screen',
+          'dashboard-screen',
+        ].forEach((id) => {
+          document.getElementById(id).style.display = 'none';
+        });
+        document.getElementById(name + '-screen').style.display = 'block';
+      };
+
+      // ── 날짜 ─────────────────────────────────────
       function formatDate(d) {
         return (
           d.getFullYear() +
@@ -736,20 +1271,16 @@
           '일'
         );
       }
-
       function updateDateDisplay() {
         currentDateStr = formatDate(selectedDate);
         document.getElementById('date-display').textContent =
           '📅 ' + currentDateStr;
       }
-
-      function toggleCalendar() {
-        const wrap = document.getElementById('calendar-wrap');
-        const isOpen = wrap.classList.toggle('open');
-        if (isOpen) renderCalendar();
-      }
-
-      function moveMonth(dir) {
+      window.toggleCalendar = function () {
+        const w = document.getElementById('calendar-wrap');
+        if (w.classList.toggle('open')) renderCalendar();
+      };
+      window.moveMonth = function (dir) {
         calViewMonth += dir;
         if (calViewMonth > 11) {
           calViewMonth = 0;
@@ -760,8 +1291,7 @@
           calViewYear--;
         }
         renderCalendar();
-      }
-
+      };
       function renderCalendar() {
         const months = [
           '1월',
@@ -779,30 +1309,22 @@
         ];
         document.getElementById('cal-title').textContent =
           calViewYear + '년 ' + months[calViewMonth];
-
         const grid = document.getElementById('cal-grid');
         grid.innerHTML = '';
-
-        // 요일 헤더
         ['일', '월', '화', '수', '목', '금', '토'].forEach((d) => {
           const el = document.createElement('div');
           el.className = 'cal-day-name';
           el.textContent = d;
           grid.appendChild(el);
         });
-
         const firstDay = new Date(calViewYear, calViewMonth, 1).getDay();
         const lastDate = new Date(calViewYear, calViewMonth + 1, 0).getDate();
         const today = new Date();
-
-        // 빈 칸
         for (let i = 0; i < firstDay; i++) {
           const el = document.createElement('div');
           el.className = 'cal-day empty';
           grid.appendChild(el);
         }
-
-        // 날짜
         for (let d = 1; d <= lastDate; d++) {
           const el = document.createElement('div');
           const dow = (firstDay + d - 1) % 7;
@@ -827,90 +1349,78 @@
           grid.appendChild(el);
         }
       }
-
       function selectDate(d) {
         selectedDate = new Date(calViewYear, calViewMonth, d);
         updateDateDisplay();
         document.getElementById('calendar-wrap').classList.remove('open');
       }
 
-      // ── 화면 전환 ─────────────────────────────────
-      function showScreen(name) {
-        [
-          'tutor-screen',
-          'member-screen',
-          'exercise-screen',
-          'result-screen',
-        ].forEach((id) => {
-          document.getElementById(id).style.display = 'none';
-        });
-        document.getElementById(name + '-screen').style.display = 'block';
-      }
-
-      function selectTutor(name) {
+      // ── 튜터/회원 ────────────────────────────────
+      window.selectTutor = function (name) {
         currentTutor = name;
         document.getElementById('tutor-name-display').textContent =
           name + ' 튜터';
         renderMembers();
         showScreen('member');
-      }
-
+      };
       function renderMembers() {
         const list = document.getElementById('member-list');
         list.innerHTML = '';
         const myMembers = members[currentTutor] || [];
+        const countEl = document.createElement('p');
+        countEl.style.cssText =
+          'font-size:13px;color:#2d6a4f;font-weight:bold;margin-bottom:12px;';
+        countEl.textContent = '총 ' + myMembers.length + '명';
+        list.appendChild(countEl);
         if (myMembers.length === 0) {
-          list.innerHTML =
-            '<p style="color:#aaa;font-size:14px;margin-bottom:12px;">아직 등록된 회원이 없어요</p>';
+          const p = document.createElement('p');
+          p.style.cssText = 'color:#aaa;font-size:14px;margin-bottom:12px;';
+          p.textContent = '아직 등록된 회원이 없어요';
+          list.appendChild(p);
           return;
         }
         myMembers.forEach((name, idx) => {
           const row = document.createElement('div');
           row.className = 'member-row';
-          const nameBtn = document.createElement('button');
-          nameBtn.className = 'name-btn';
-          nameBtn.textContent = name;
-          nameBtn.onclick = () => selectMember(name);
-          const delBtn = document.createElement('button');
-          delBtn.className = 'del-member-btn';
-          delBtn.textContent = '✕';
-          delBtn.onclick = () => deleteMember(idx);
-          row.appendChild(nameBtn);
-          row.appendChild(delBtn);
+          const nb = document.createElement('button');
+          nb.className = 'name-btn';
+          nb.textContent = name;
+          nb.onclick = () => selectMember(name);
+          const db2 = document.createElement('button');
+          db2.className = 'del-member-btn';
+          db2.textContent = '✕';
+          db2.onclick = () => deleteMember(idx);
+          row.appendChild(nb);
+          row.appendChild(db2);
           list.appendChild(row);
         });
       }
-
-      function addMember() {
+      window.addMember = async function () {
         const name = prompt('새 회원 이름을 입력하세요:');
         if (name && name.trim()) {
           if (!members[currentTutor]) members[currentTutor] = [];
           members[currentTutor].push(name.trim());
           saveMembers();
+          await saveMemberSnapshot(); // 회원 추가 시 스냅샷 업데이트
           renderMembers();
         }
-      }
-
-      function deleteMember(idx) {
-        const name = members[currentTutor][idx];
-        if (confirm(name + ' 회원을 삭제할까요?')) {
+      };
+      async function deleteMember(idx) {
+        if (confirm(members[currentTutor][idx] + ' 회원을 삭제할까요?')) {
           members[currentTutor].splice(idx, 1);
           saveMembers();
+          await saveMemberSnapshot(); // 회원 삭제 시 스냅샷 업데이트
           renderMembers();
         }
       }
-
       function selectMember(name) {
         currentMember = name;
         document.getElementById('member-name-display').textContent =
           name + ' 회원님';
-
-        // 날짜 오늘로 초기화
         selectedDate = new Date();
         calViewYear = selectedDate.getFullYear();
         calViewMonth = selectedDate.getMonth();
         updateDateDisplay();
-
         ['warmup', 'main', 'cooldown'].forEach((s) => {
           document.getElementById('list-' + s).innerHTML = '';
         });
@@ -921,7 +1431,8 @@
         showScreen('exercise');
       }
 
-      function switchTab(name) {
+      // ── 탭 ──────────────────────────────────────
+      window.switchTab = function (name) {
         currentTab = name;
         ['warmup', 'main', 'cooldown'].forEach((t) => {
           document
@@ -931,9 +1442,10 @@
             .getElementById('panel-' + t)
             .classList.toggle('active', t === name);
         });
-      }
+      };
 
-      function addRow(
+      // ── 운동 행 ──────────────────────────────────
+      window.addRow = function (
         section,
         name = '',
         weight = '',
@@ -944,27 +1456,111 @@
         const row = document.createElement('div');
         row.className = 'exercise-row';
         row.innerHTML = `
-      <input type="text"   placeholder="예) 스쿼트" value="${name}" />
-      <input type="number" placeholder="60" min="0"  value="${weight}" />
-      <input type="number" placeholder="3"  min="1"  value="${sets}" />
+      <input type="text" placeholder="예) 스쿼트" value="${name}" oninput="checkExerciseHint(this)" />
+      <input type="number" placeholder="60" min="0" value="${weight}" />
+      <input type="number" placeholder="3" min="1" value="${sets}" />
       <div class="reps-wrap">
         <input type="number" placeholder="10" min="1" value="${reps}" />
         <button class="unit-toggle" onclick="toggleUnit(this)">${unit}</button>
       </div>
       <button class="delete-btn" onclick="this.parentElement.remove()">✕</button>
-    `;
+      <div class="exercise-hint">
+        <div class="hint-header"><span class="hint-title">📌 저장된 운동 방법</span><button class="hint-use-btn" onclick="useHint(this)">이 피드백 사용하기</button></div>
+        <div class="hint-text"></div>
+      </div>`;
         document.getElementById('list-' + section).appendChild(row);
-      }
-
-      function toggleUnit(btn) {
+        if (name)
+          checkExerciseHintByName(row.querySelector('input[type=text]'), name);
+      };
+      window.toggleUnit = function (btn) {
         btn.textContent = btn.textContent === '회' ? '초' : '회';
+      };
+      window.checkExerciseHint = function (input) {
+        checkExerciseHintByName(input, input.value.trim());
+      };
+      function checkExerciseHintByName(input, name) {
+        const row = input.closest('.exercise-row');
+        const hint = row.querySelector('.exercise-hint');
+        const found = exerciseDB.find((e) => e.name.trim() === name.trim());
+        if (found && found.method) {
+          hint.querySelector('.hint-text').textContent = found.method;
+          hint.classList.add('show');
+        } else {
+          hint.classList.remove('show');
+        }
       }
+      window.useHint = function (btn) {
+        const method = btn
+          .closest('.exercise-hint')
+          .querySelector('.hint-text').textContent;
+        const cur = document.getElementById('feedback-msg').value.trim();
+        document.getElementById('feedback-msg').value = cur
+          ? cur + '\n' + method
+          : method;
+        btn.closest('.exercise-hint').classList.remove('show');
+      };
+
+      // ── 운동 DB ──────────────────────────────────
+      function renderDB() {
+        const list = document.getElementById('db-list');
+        list.innerHTML = '';
+        if (exerciseDB.length === 0) {
+          list.innerHTML =
+            '<p style="color:#aaa;font-size:14px;">아직 등록된 운동이 없어요</p>';
+          return;
+        }
+        exerciseDB.forEach((ex, idx) => {
+          const item = document.createElement('div');
+          item.className = 'db-item';
+          item.innerHTML = `<div class="db-item-header"><span class="db-item-name">${
+            ex.name
+          }</span><div class="db-item-btns"><button class="db-edit-btn" onclick="openModal(${idx})">수정</button><button class="db-del-btn" onclick="deleteExerciseDB(${idx})">삭제</button></div></div><div class="db-item-method">${
+            ex.method || '운동 방법 없음'
+          }</div>`;
+          list.appendChild(item);
+        });
+      }
+      window.openModal = function (idx = -1) {
+        editingIdx = idx;
+        document.getElementById('modal-title').textContent =
+          idx === -1 ? '운동 추가' : '운동 수정';
+        document.getElementById('modal-name').value =
+          idx === -1 ? '' : exerciseDB[idx].name;
+        document.getElementById('modal-method').value =
+          idx === -1 ? '' : exerciseDB[idx].method;
+        document.getElementById('modal-overlay').classList.add('open');
+      };
+      window.closeModal = function () {
+        document.getElementById('modal-overlay').classList.remove('open');
+      };
+      window.saveExerciseDB = function () {
+        const name = document.getElementById('modal-name').value.trim();
+        const method = document.getElementById('modal-method').value.trim();
+        if (!name) {
+          alert('운동 이름을 입력해주세요!');
+          return;
+        }
+        if (editingIdx === -1) {
+          exerciseDB.push({ name, method });
+        } else {
+          exerciseDB[editingIdx] = { name, method };
+        }
+        saveExerciseDB_store();
+        closeModal();
+        renderDB();
+      };
+      window.deleteExerciseDB = function (idx) {
+        if (confirm(exerciseDB[idx].name + '을 삭제할까요?')) {
+          exerciseDB.splice(idx, 1);
+          saveExerciseDB_store();
+          renderDB();
+        }
+      };
 
       // ── 음성 인식 ────────────────────────────────
-      function toggleVoice() {
+      window.toggleVoice = function () {
         isListening ? stopVoice() : startVoice();
-      }
-
+      };
       function startVoice() {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SR) {
@@ -980,14 +1576,14 @@
           document.getElementById('mic-btn').classList.add('listening');
           document.getElementById('mic-btn').textContent = '⏹';
           document.getElementById('voice-status').textContent =
-            '🔴 듣고 있어요... 운동을 말해보세요!';
+            '🔴 듣고 있어요!';
           document.getElementById('voice-status').classList.add('active');
         };
         recognition.onresult = (e) => {
-          const transcript = e.results[0][0].transcript;
+          const t = e.results[0][0].transcript;
           document.getElementById('voice-status').textContent =
-            '인식됨: "' + transcript + '"';
-          parseVoiceInput(transcript);
+            '인식됨: "' + t + '"';
+          parseVoiceInput(t);
         };
         recognition.onerror = () => {
           stopVoice();
@@ -997,7 +1593,6 @@
         recognition.onend = () => stopVoice();
         recognition.start();
       }
-
       function stopVoice() {
         isListening = false;
         if (recognition) recognition.stop();
@@ -1005,7 +1600,50 @@
         document.getElementById('mic-btn').textContent = '🎤';
         document.getElementById('voice-status').classList.remove('active');
       }
-
+      window.toggleFeedbackVoice = function () {
+        isFeedbackListening ? stopFeedbackVoice() : startFeedbackVoice();
+      };
+      function startFeedbackVoice() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+          alert('Chrome 브라우저를 사용해 주세요!');
+          return;
+        }
+        feedbackRecognition = new SR();
+        feedbackRecognition.lang = 'ko-KR';
+        feedbackRecognition.continuous = true;
+        feedbackRecognition.interimResults = true;
+        let finalText = document.getElementById('feedback-msg').value;
+        feedbackRecognition.onstart = () => {
+          isFeedbackListening = true;
+          const btn = document.getElementById('feedback-mic-btn');
+          btn.textContent = '⏹ 중지';
+          btn.classList.add('listening');
+        };
+        feedbackRecognition.onresult = (e) => {
+          let interim = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            if (e.results[i].isFinal) {
+              finalText += e.results[i][0].transcript;
+            } else {
+              interim = e.results[i][0].transcript;
+            }
+          }
+          document.getElementById('feedback-msg').value = finalText + interim;
+        };
+        feedbackRecognition.onerror = () => stopFeedbackVoice();
+        feedbackRecognition.onend = () => {
+          if (isFeedbackListening) feedbackRecognition.start();
+        };
+        feedbackRecognition.start();
+      }
+      function stopFeedbackVoice() {
+        isFeedbackListening = false;
+        if (feedbackRecognition) feedbackRecognition.stop();
+        const btn = document.getElementById('feedback-mic-btn');
+        btn.textContent = '🎤 음성 입력';
+        btn.classList.remove('listening');
+      }
       function parseVoiceInput(text) {
         const numMap = {
           영: 0,
@@ -1054,15 +1692,14 @@
           .replace(/세트|회|번|번씩|개|kg|킬|키|초/g, '')
           .replace(/\s+/g, ' ')
           .trim();
-        const nameMatch = text.match(
+        const nm = text.match(
           /^([가-힣\s]+?)(?=\s*(?:영|일|이|삼|사|오십|육십|칠십|팔십|구십|오|육|칠|팔|구|십|백|\d))/
         );
-        if (nameMatch && nameMatch[1].trim().length > 0)
-          exName = nameMatch[1].trim();
-        const weight = nums[0] || '';
-        const sets = nums[1] || '';
-        const reps = nums[2] || '';
-        const unit = isSec ? '초' : '회';
+        if (nm && nm[1].trim().length > 0) exName = nm[1].trim();
+        const weight = nums[0] || '',
+          sets = nums[1] || '',
+          reps = nums[2] || '',
+          unit = isSec ? '초' : '회';
         if (exName || weight) {
           const listId = 'list-' + currentTab;
           const rows = document.querySelectorAll(
@@ -1075,17 +1712,17 @@
             lastInputs[1].value = weight;
             lastInputs[2].value = sets;
             lastInputs[3].value = reps;
-            const unitBtn = lastRow.querySelector('.unit-toggle');
-            if (unitBtn) unitBtn.textContent = unit;
+            const ub = lastRow.querySelector('.unit-toggle');
+            if (ub) ub.textContent = unit;
+            checkExerciseHintByName(lastInputs[0], exName);
           } else {
             addRow(currentTab, exName, weight, sets, reps, unit);
           }
-          document.getElementById('voice-status').textContent =
-            '✅ 입력 완료! 확인 후 수정하세요.';
+          document.getElementById('voice-status').textContent = '✅ 입력 완료!';
         }
       }
 
-      // ── 저장 & 결과 ──────────────────────────────
+      // ── 저장 ─────────────────────────────────────
       function getExercises(section) {
         const rows = document.querySelectorAll(
           '#list-' + section + ' .exercise-row'
@@ -1093,16 +1730,15 @@
         const list = [];
         rows.forEach((row) => {
           const inputs = row.querySelectorAll('input');
-          const name = inputs[0].value.trim();
-          const weight = inputs[1].value.trim();
-          const sets = inputs[2].value.trim();
-          const reps = inputs[3].value.trim();
+          const name = inputs[0].value.trim(),
+            weight = inputs[1].value.trim(),
+            sets = inputs[2].value.trim(),
+            reps = inputs[3].value.trim();
           const unit = row.querySelector('.unit-toggle').textContent.trim();
           if (name) list.push({ name, weight, sets, reps, unit });
         });
         return list;
       }
-
       function formatExercises(exercises) {
         return exercises
           .map((ex, i) => {
@@ -1117,48 +1753,63 @@
           })
           .join('\n');
       }
-
-      function saveRecord() {
-        const warmup = getExercises('warmup');
-        const main = getExercises('main');
-        const cooldown = getExercises('cooldown');
+      window.saveRecord = async function () {
+        const warmup = getExercises('warmup'),
+          main = getExercises('main'),
+          cooldown = getExercises('cooldown');
         if (warmup.length === 0 && main.length === 0) {
-          alert(
-            'Warm up 또는 Main workout에 운동을 최소 1개 이상 입력해주세요!'
-          );
+          alert('운동을 최소 1개 이상 입력해주세요!');
           return;
+        }
+        stopFeedbackVoice();
+        try {
+          for (const ex of [...warmup, ...main, ...cooldown]) {
+            await addDoc(collection(db, 'workout_records'), {
+              member: currentMember,
+              tutor: currentTutor,
+              date: currentDateStr,
+              dateObj: selectedDate.toISOString(),
+              exerciseName: ex.name,
+              weight: Number(ex.weight) || 0,
+              sets: Number(ex.sets) || 0,
+              reps: Number(ex.reps) || 0,
+              unit: ex.unit,
+              createdAt: new Date(),
+            });
+          }
+        } catch (e) {
+          console.error(e);
         }
         let result = '';
         result += '📋 ' + currentMember + ' 회원님 운동 일지\n';
         result += '📅 ' + currentDateStr + '\n';
         result += '👤 담당 튜터: ' + currentTutor + '\n';
-        if (warmup.length > 0) {
-          result += '\n🔥 Warm up\n';
-          result += '─────────────────\n';
-          result += formatExercises(warmup) + '\n';
-        }
-        if (main.length > 0) {
-          result += '\n💪 Main workout\n';
-          result += '─────────────────\n';
-          result += formatExercises(main) + '\n';
-        }
-        if (cooldown.length > 0) {
-          result += '\n❄️ Cool down\n';
-          result += '─────────────────\n';
-          result += formatExercises(cooldown) + '\n';
-        }
+        if (warmup.length > 0)
+          result +=
+            '\n🔥 Warm up\n─────────────────\n' +
+            formatExercises(warmup) +
+            '\n';
+        if (main.length > 0)
+          result +=
+            '\n💪 Main workout\n─────────────────\n' +
+            formatExercises(main) +
+            '\n';
+        if (cooldown.length > 0)
+          result +=
+            '\n❄️ Cool down\n─────────────────\n' +
+            formatExercises(cooldown) +
+            '\n';
         result += '─────────────────\n';
         const msg = document.getElementById('feedback-msg').value.trim();
         result += msg ? msg : '✅ 오늘도 수고하셨습니다! 💪';
         lastResult = result;
         document.getElementById('result-text').textContent = result;
-        const copyBtn = document.getElementById('copy-btn');
-        copyBtn.textContent = '📋 복사하기 (밴드/카톡에 붙여넣기)';
-        copyBtn.classList.remove('copied');
+        document.getElementById('copy-btn').textContent =
+          '📋 복사하기 (밴드/카톡에 붙여넣기)';
+        document.getElementById('copy-btn').classList.remove('copied');
         showScreen('result');
-      }
-
-      function copyResult() {
+      };
+      window.copyResult = function () {
         navigator.clipboard
           .writeText(lastResult)
           .then(() => {
@@ -1174,10 +1825,249 @@
             document.execCommand('copy');
             document.body.removeChild(el);
             const btn = document.getElementById('copy-btn');
-            btn.textContent = '✅ 복사 완료! 이제 밴드/카톡에 붙여넣으세요';
+            btn.textContent = '✅ 복사 완료!';
             btn.classList.add('copied');
           });
+      };
+
+      // ── 성장 기록 ─────────────────────────────────
+      function loadMemberOptions() {
+        const sel = document.getElementById('growth-member');
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">회원 선택</option>';
+        const allMembers = Object.values(members).flat();
+        [...new Set(allMembers)].forEach((name) => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          sel.appendChild(opt);
+        });
+        if (cur) sel.value = cur;
       }
+      window.onGrowthMemberChange = async function () {
+        const member = document.getElementById('growth-member').value;
+        const exSel = document.getElementById('growth-exercise');
+        exSel.innerHTML = '<option value="">운동 선택</option>';
+        document.getElementById('growth-content').innerHTML =
+          '<p class="empty-msg">운동을 선택해주세요</p>';
+        if (!member) return;
+        try {
+          const q = query(
+            collection(db, 'workout_records'),
+            where('member', '==', member)
+          );
+          const snap = await getDocs(q);
+          const exNames = [
+            ...new Set(snap.docs.map((d) => d.data().exerciseName)),
+          ];
+          exNames.forEach((name) => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            exSel.appendChild(opt);
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      window.loadGrowthData = async function () {
+        const member = document.getElementById('growth-member').value;
+        const exercise = document.getElementById('growth-exercise').value;
+        const period = document.getElementById('growth-period').value;
+        const content = document.getElementById('growth-content');
+        if (!member || !exercise) {
+          content.innerHTML =
+            '<p class="empty-msg">회원과 운동을 선택해주세요</p>';
+          return;
+        }
+        content.innerHTML = '<p class="loading-msg">불러오는 중...</p>';
+        try {
+          const q = query(
+            collection(db, 'workout_records'),
+            where('member', '==', member),
+            orderBy('dateObj', 'asc')
+          );
+          const snap = await getDocs(q);
+          let records = snap.docs
+            .map((d) => d.data())
+            .filter((r) => r.exerciseName === exercise);
+          const now = new Date();
+          if (period === 'week') {
+            const c = new Date(now);
+            c.setDate(now.getDate() - 7);
+            records = records.filter((r) => new Date(r.dateObj) >= c);
+          } else if (period === 'month') {
+            const c = new Date(now);
+            c.setMonth(now.getMonth() - 1);
+            records = records.filter((r) => new Date(r.dateObj) >= c);
+          } else if (period === 'year') {
+            const c = new Date(now);
+            c.setFullYear(now.getFullYear() - 1);
+            records = records.filter((r) => new Date(r.dateObj) >= c);
+          }
+          if (records.length === 0) {
+            content.innerHTML =
+              '<p class="empty-msg">해당 기간에 기록이 없어요</p>';
+            return;
+          }
+          const labels = records.map((r) => r.date);
+          const weightData = records.map((r) => r.weight || 0);
+          const repsData = records.map((r) => r.reps || 0);
+          content.innerHTML = `
+        <p style="font-size:13px;font-weight:bold;color:#2d6a4f;margin-bottom:6px;">📦 중량 변화</p>
+        <div class="chart-wrap"><canvas id="chartWeight"></canvas></div>
+        <p style="font-size:13px;font-weight:bold;color:#2d6a4f;margin-bottom:6px;margin-top:8px;">🔄 횟수/초 변화</p>
+        <div class="chart-wrap"><canvas id="chartReps"></canvas></div>
+        <p style="font-size:13px;font-weight:bold;color:#333;margin-bottom:8px;margin-top:16px;">📋 상세 기록</p>
+        <table class="growth-table">
+          <thead><tr><th>날짜</th><th>중량</th><th>세트</th><th>횟수/초</th></tr></thead>
+          <tbody>${records
+            .map(
+              (r) =>
+                `<tr><td>${r.date}</td><td>${
+                  r.weight ? r.weight + 'kg' : '-'
+                }</td><td>${r.sets ? r.sets + '세트' : '-'}</td><td>${
+                  r.reps ? r.reps + r.unit : '-'
+                }</td></tr>`
+            )
+            .join('')}</tbody>
+        </table>`;
+          if (growthChartWeight) growthChartWeight.destroy();
+          if (growthChartReps) growthChartReps.destroy();
+          const opts = (label, data, color) => ({
+            type: 'line',
+            data: {
+              labels,
+              datasets: [
+                {
+                  label,
+                  data,
+                  borderColor: color,
+                  backgroundColor: color + '22',
+                  tension: 0.3,
+                  fill: true,
+                  pointRadius: 4,
+                  pointHoverRadius: 6,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: { beginAtZero: false, grid: { color: '#f0f4f8' } },
+                x: {
+                  grid: { display: false },
+                  ticks: { maxTicksLimit: 6, font: { size: 11 } },
+                },
+              },
+            },
+          });
+          growthChartWeight = new Chart(
+            document.getElementById('chartWeight'),
+            opts('중량(kg)', weightData, '#2d6a4f')
+          );
+          growthChartReps = new Chart(
+            document.getElementById('chartReps'),
+            opts('횟수/초', repsData, '#4a90d9')
+          );
+        } catch (e) {
+          content.innerHTML =
+            '<p class="empty-msg">데이터를 불러오는 중 오류가 발생했어요</p>';
+          console.error(e);
+        }
+      };
+
+      // ── 대시보드 ──────────────────────────────────
+      async function loadDashboard() {
+        const content = document.getElementById('dashboard-content');
+        content.innerHTML = '<p class="loading-msg">불러오는 중...</p>';
+
+        // 이번달 스냅샷 저장 (회원 추가/삭제 시 자동 저장되지만, 혹시 모를 경우 대비)
+        await saveMemberSnapshot();
+
+        const now = new Date();
+        const thisYM =
+          now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        const lastD = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastYM =
+          lastD.getFullYear() +
+          '-' +
+          String(lastD.getMonth() + 1).padStart(2, '0');
+
+        let html = '';
+        for (const tutor of TUTORS) {
+          const myMembers = members[tutor] || [];
+          const thisCount = myMembers.length;
+          let lastCount = null;
+
+          try {
+            // 지난달 스냅샷 조회
+            const lastSnap = await getDoc(
+              doc(db, 'member_snapshots', tutor + '_' + lastYM)
+            );
+            if (lastSnap.exists()) lastCount = lastSnap.data().count;
+          } catch (e) {
+            console.error(e);
+          }
+
+          // 전달 대비 계산
+          let changeClass = 'same',
+            changeText = '정보 없음',
+            diffNum = '?',
+            diffClass = 'same';
+          if (lastCount !== null) {
+            const diff = thisCount - lastCount;
+            diffNum = diff > 0 ? '+' + diff : diff === 0 ? '±0' : String(diff);
+            diffClass = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+            changeClass = diffClass;
+            changeText =
+              diff > 0
+                ? '▲ ' + diff + '명 증가'
+                : diff < 0
+                ? '▼ ' + Math.abs(diff) + '명 감소'
+                : '→ 전달과 동일';
+          }
+
+          html += `
+        <div class="dash-tutor-card">
+          <div class="dash-tutor-header">
+            <span class="dash-tutor-name">${tutor} 튜터</span>
+            <span class="dash-change ${changeClass}">${changeText}</span>
+          </div>
+          <div class="dash-count-wrap">
+            <div class="dash-count-item">
+              <div class="dash-count-num">${thisCount}</div>
+              <div class="dash-count-label">이번달 회원 수</div>
+            </div>
+            <div class="dash-count-item">
+              <div class="dash-count-num">${
+                lastCount !== null ? lastCount : '-'
+              }</div>
+              <div class="dash-count-label">지난달 회원 수</div>
+            </div>
+            <div class="dash-count-item">
+              <div class="dash-diff-num ${diffClass}">${
+            lastCount !== null ? diffNum : '-'
+          }</div>
+              <div class="dash-count-label">전달 대비</div>
+            </div>
+          </div>
+          <div class="dash-member-list">
+            ${
+              myMembers.length > 0
+                ? '👥 ' + myMembers.join(', ')
+                : '등록된 회원 없음'
+            }
+          </div>
+        </div>`;
+        }
+        content.innerHTML = html;
+      }
+
+      // 앱 시작 시 이번달 스냅샷 초기화
+      saveMemberSnapshot();
     </script>
   </body>
 </html>
