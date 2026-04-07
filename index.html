@@ -53,6 +53,17 @@
     .col-headers { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 6px; margin-bottom: 4px; }
     .col-label { font-size: 11px; color: #aaa; text-align: center; }
     .exercise-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 6px; margin-bottom: 2px; align-items: start; }
+    .exercise-name-wrap { position: relative; }
+    .exercise-name-wrap input { padding: 10px 8px; border: 1px solid #dee2e6; border-radius: 8px; font-size: 14px; width: 100%; }
+    .exercise-name-wrap input:focus { outline: none; border-color: #2d6a4f; }
+    /* 자동완성 드롭다운 */
+    .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #b7e4c7; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 200; max-height: 180px; overflow-y: auto; display: none; }
+    .autocomplete-list.show { display: block; }
+    .autocomplete-item { padding: 10px 12px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #f0f4f8; }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: #f0f9f4; color: #2d6a4f; font-weight: bold; }
+    .autocomplete-item .ac-name { color: #333; }
+    .autocomplete-item .ac-method { font-size: 11px; color: #aaa; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
     .exercise-row input { padding: 10px 8px; border: 1px solid #dee2e6; border-radius: 8px; font-size: 14px; width: 100%; }
     .exercise-row input:focus { outline: none; border-color: #2d6a4f; }
     .reps-wrap { display: flex; }
@@ -75,6 +86,15 @@
     .memo-mic-btn { padding: 0 10px; height: 52px; background: #f0f9f4; color: #2d6a4f; border: 1px solid #b7e4c7; border-radius: 8px; font-size: 18px; cursor: pointer; flex-shrink: 0; }
     .memo-mic-btn.listening { background: #fde8ea; color: #e63946; border-color: #f5a3aa; animation: pulse 1s infinite; }
     .add-exercise-btn { display: block; width: 100%; padding: 12px; background: #f0f4f8; color: #2d6a4f; border: 1px dashed #2d6a4f; border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 4px; }
+    /* 템플릿 */
+    .template-section { margin-bottom: 16px; }
+    .template-label { font-size: 13px; font-weight: bold; color: #555; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .template-save-btn { padding: 4px 10px; background: #f0f9f4; color: #2d6a4f; border: 1px solid #b7e4c7; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .template-list { display: flex; gap: 8px; flex-wrap: wrap; }
+    .template-chip { padding: 6px 12px; background: #f0f9f4; color: #2d6a4f; border: 1px solid #b7e4c7; border-radius: 20px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .template-chip:hover { background: #d1e7dd; }
+    .template-chip-del { color: #ccc; font-size: 12px; cursor: pointer; }
+    .template-chip-del:hover { color: #e74c3c; }
     .feedback-wrap { margin-top: 16px; }
     .feedback-label { font-size: 13px; color: #555; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
     .feedback-mic-btn { padding: 5px 10px; background: #f0f9f4; color: #2d6a4f; border: 1px solid #b7e4c7; border-radius: 8px; font-size: 12px; cursor: pointer; }
@@ -95,13 +115,12 @@
     .copy-btn:hover { background: #1b4332; }
     .copy-btn.copied { background: #40916c; }
     .another-btn { display: block; width: 100%; padding: 14px; background: white; color: #2d6a4f; border: 2px solid #2d6a4f; border-radius: 12px; font-size: 16px; cursor: pointer; }
-    /* 운동 DB */
     .db-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .db-add-btn { padding: 8px 14px; background: #2d6a4f; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
     .db-count-badge { font-size: 12px; color: #888; margin-bottom: 16px; }
     .db-search { display: block; width: 100%; padding: 10px 14px; border: 1px solid #dee2e6; border-radius: 10px; font-size: 14px; margin-bottom: 14px; font-family: inherit; }
     .db-search:focus { outline: none; border-color: #2d6a4f; }
-    .db-item { border: 1px solid #dee2e6; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; transition: border-color 0.2s; }
+    .db-item { border: 1px solid #dee2e6; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
     .db-item:hover { border-color: #b7e4c7; }
     .db-item-header { display: flex; justify-content: space-between; align-items: center; }
     .db-item-name { font-size: 15px; font-weight: bold; color: #2d6a4f; }
@@ -111,8 +130,7 @@
     .db-del-btn:hover { color: #e74c3c; border-color: #e74c3c; }
     .db-item-method { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.6; white-space: pre-wrap; }
     .db-item-no-method { font-size: 12px; color: #bbb; margin-top: 6px; font-style: italic; }
-    .db-new-badge { display: inline-block; background: #fff3cd; color: #856404; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
-    /* 성장 */
+    .db-new-badge { display: inline-block; background: #fff3cd; color: #856404; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; margin-left: 6px; }
     .growth-filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .growth-filters select { flex: 1; padding: 8px 12px; border: 1px solid #dee2e6; border-radius: 8px; font-size: 14px; min-width: 100px; }
     .chart-wrap { position: relative; height: 200px; margin-bottom: 16px; }
@@ -120,7 +138,6 @@
     .growth-table th { background: #f0f9f4; color: #2d6a4f; padding: 8px; text-align: center; border-bottom: 2px solid #b7e4c7; }
     .growth-table td { padding: 8px; text-align: center; border-bottom: 1px solid #f0f4f8; }
     .growth-table tr:hover td { background: #f8f9fa; }
-    /* 리포트 */
     .report-section-title { font-size: 15px; font-weight: bold; color: #2d6a4f; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #d1e7dd; }
     .report-period-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
     .period-tab { padding: 6px 14px; border: 1px solid #dee2e6; border-radius: 20px; font-size: 13px; cursor: pointer; background: white; color: #666; }
@@ -149,7 +166,6 @@
     .dash-diff-num.down { color: #e74c3c; }
     .dash-diff-num.same { color: #888; }
     .lesson-chart-wrap { position: relative; height: 180px; margin-bottom: 8px; }
-    /* 로그인 */
     .login-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: #f0f4f8; }
     .login-logo { font-size: 48px; margin-bottom: 12px; }
     .login-title { font-size: 24px; font-weight: bold; color: #2d6a4f; margin-bottom: 4px; }
@@ -166,7 +182,6 @@
     .login-btn:hover { background: #1b4332; }
     .login-error { color: #e74c3c; font-size: 13px; text-align: center; margin-top: 10px; min-height: 20px; }
     .login-hint { font-size: 12px; color: #aaa; text-align: center; margin-top: 12px; }
-    /* 일지 조회 */
     .history-filters { display: flex; gap: 8px; margin-bottom: 16px; }
     .history-filters select { flex: 1; padding: 8px 12px; border: 1px solid #dee2e6; border-radius: 8px; font-size: 14px; }
     .history-item { border: 1px solid #e9ecef; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
@@ -179,7 +194,6 @@
     .history-exercise:last-child { border-bottom: none; }
     .history-section-label { font-size: 11px; font-weight: bold; color: #888; margin: 8px 0 4px; }
     .history-feedback { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px; font-size: 13px; color: #555; line-height: 1.6; }
-    /* 모달 */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
     .modal { background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 440px; max-height: 90vh; overflow-y: auto; }
@@ -191,7 +205,11 @@
     .modal-save-btn { flex: 1; padding: 12px; background: #2d6a4f; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
     .modal-cancel-btn { padding: 12px 16px; background: #f8f9fa; color: #555; border: 1px solid #dee2e6; border-radius: 8px; font-size: 15px; cursor: pointer; }
     .modal-name-readonly { display: block; width: 100%; padding: 10px 12px; border: 1px solid #e9ecef; border-radius: 8px; font-size: 14px; background: #f8f9fa; color: #555; margin-bottom: 10px; }
-    /* 하단 네비 */
+    /* 템플릿 저장 모달 */
+    .tpl-modal { background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 360px; }
+    .tpl-modal h3 { font-size: 16px; color: #333; margin-bottom: 12px; }
+    .tpl-modal input { display: block; width: 100%; padding: 12px; border: 1px solid #dee2e6; border-radius: 8px; font-size: 15px; font-family: inherit; margin-bottom: 14px; }
+    .tpl-modal input:focus { outline: none; border-color: #2d6a4f; }
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #dee2e6; display: flex; z-index: 50; }
     .nav-btn { flex: 1; padding: 10px 4px 8px; background: none; border: none; font-size: 10px; color: #aaa; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
     .nav-btn .nav-icon { font-size: 18px; }
@@ -260,12 +278,20 @@
       <div class="cal-grid" id="cal-grid"></div>
     </div>
     <div class="voice-section">
-      <p>🎤 마이크 버튼을 누르고 운동을 말해보세요<br><span style="color:#aaa">예) "스쿼트 60킬로 3세트 12회"</span></p>
+      <p>🎤 마이크 버튼을 누르고 운동을 말해보세요<br><span style="color:#aaa">예) "바벨 백 스쿼트 60킬로 3세트 12회"</span></p>
       <button class="mic-btn" id="mic-btn" onclick="toggleVoice()">🎤</button>
       <div class="voice-status" id="voice-status">버튼을 눌러 음성 입력 시작</div>
     </div>
   </div>
   <div class="card">
+    <!-- 템플릿 섹션 -->
+    <div class="template-section" id="template-section">
+      <div class="template-label">
+        <span>⚡ 루틴 템플릿</span>
+        <button class="template-save-btn" onclick="openSaveTemplateModal()">+ 현재 루틴 저장</button>
+      </div>
+      <div class="template-list" id="template-list"></div>
+    </div>
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('warmup')" id="tab-warmup">🔥 Warm up</button>
       <button class="tab-btn" onclick="switchTab('main')" id="tab-main">💪 Main</button>
@@ -315,10 +341,7 @@
 <!-- 운동 DB -->
 <div class="container" id="db-screen">
   <div class="card">
-    <div class="db-header">
-      <h2>📚 운동 DB</h2>
-      <button class="db-add-btn" onclick="openDbModal()">+ 직접 추가</button>
-    </div>
+    <div class="db-header"><h2>📚 운동 DB</h2><button class="db-add-btn" onclick="openDbModal()">+ 직접 추가</button></div>
     <div class="db-count-badge" id="db-count-badge"></div>
     <input type="text" class="db-search" id="db-search" placeholder="🔍 운동 이름 검색..." oninput="renderDB()"/>
     <div id="db-list"></div>
@@ -333,10 +356,8 @@
       <select id="growth-member" onchange="onGrowthMemberChange()"><option value="">회원 선택</option></select>
       <select id="growth-exercise" onchange="loadGrowthData()"><option value="">운동 선택</option></select>
       <select id="growth-period" onchange="loadGrowthData()">
-        <option value="all">전체</option>
-        <option value="week">주간</option>
-        <option value="month" selected>월간</option>
-        <option value="year">연간</option>
+        <option value="all">전체</option><option value="week">주간</option>
+        <option value="month" selected>월간</option><option value="year">연간</option>
       </select>
     </div>
     <div id="growth-content"><p class="empty-msg">회원과 운동을 선택하면 기록이 나타나요</p></div>
@@ -382,10 +403,23 @@
     <h3 id="db-modal-title">운동 추가</h3>
     <div id="db-modal-name-wrap"></div>
     <p style="font-size:12px;color:#888;margin-bottom:8px;">운동 방법 / 코칭 포인트</p>
-    <textarea id="db-modal-method" placeholder="예) 발 어깨너비로 벌리기&#10;무릎이 발끝을 넘지 않도록&#10;시선은 정면 유지"></textarea>
+    <textarea id="db-modal-method" placeholder="예) 발 어깨너비로 벌리기&#10;무릎이 발끝을 넘지 않도록"></textarea>
     <div class="modal-btns">
       <button class="modal-cancel-btn" onclick="closeDbModal()">취소</button>
       <button class="modal-save-btn" onclick="saveDbModal()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 템플릿 저장 모달 -->
+<div class="modal-overlay" id="tpl-save-modal">
+  <div class="tpl-modal">
+    <h3>루틴 템플릿 저장</h3>
+    <p style="font-size:13px;color:#888;margin-bottom:12px;">현재 입력된 운동 목록을 템플릿으로 저장해요</p>
+    <input type="text" id="tpl-name-input" placeholder="템플릿 이름 (예: 하체 루틴, 가슴 루틴)" onkeydown="if(event.key==='Enter')saveTemplate()"/>
+    <div class="modal-btns">
+      <button class="modal-cancel-btn" onclick="closeSaveTemplateModal()">취소</button>
+      <button class="modal-save-btn" onclick="saveTemplate()">저장</button>
     </div>
   </div>
 </div>
@@ -401,7 +435,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, deleteDoc, query, where, orderBy }
+  import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, deleteDoc, query, where }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -412,64 +446,134 @@
     messagingSenderId: "194773962037",
     appId: "1:194773962037:web:252f8ccf5b9e30293c907c"
   };
-
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
   const TUTORS = ['이순재','박재우','이승일','이종민'];
   const DEFAULT_PW = '1234';
 
-  // ── 운동 DB (Firebase 기반) ───────────────────
-  // exerciseDB: [{ name, method, hasMethod }]
+  // ── 운동 DB ──────────────────────────────────
   let exerciseDB = [];
-  let dbEditingName = null; // 수정 중인 운동 이름
-
   async function loadExerciseDBFromFirebase() {
     exerciseDB = [];
     try {
-      const snap = await getDocs(collection(db, 'exercise_db'));
-      snap.docs.forEach(d => {
-        const data = d.data();
-        exerciseDB.push({ name: data.name, method: data.method || '', hasMethod: !!(data.method) });
-      });
-      exerciseDB.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      const snap = await getDocs(collection(db,'exercise_db'));
+      snap.docs.forEach(d => { const data = d.data(); exerciseDB.push({ name: data.name, method: data.method||'', hasMethod: !!(data.method) }); });
+      exerciseDB.sort((a,b) => a.name.localeCompare(b.name,'ko'));
     } catch(e) { console.error(e); }
   }
-
-  // 운동 이름 목록 (중복 제거용)
-  function getExerciseNames() { return exerciseDB.map(e => e.name); }
-
-  // 일지 저장 후 새 운동이름만 DB에 추가
-  async function autoAddExercisesToDB(exerciseNames) {
-    const existingNames = getExerciseNames().map(n => n.trim().toLowerCase());
-    const newNames = [...new Set(exerciseNames
-      .map(n => n.trim())
-      .filter(n => n && !existingNames.includes(n.toLowerCase()))
-    )];
+  async function autoAddExercisesToDB(names) {
+    const existing = exerciseDB.map(e => e.name.trim().toLowerCase());
+    const newNames = [...new Set(names.map(n=>n.trim()).filter(n => n && !existing.includes(n.toLowerCase())))];
     for (const name of newNames) {
       try {
-        // 문서 ID = 운동이름 (중복 방지)
-        await setDoc(doc(db, 'exercise_db', name), {
-          name, method: '', hasMethod: false, createdAt: new Date().toISOString()
-        });
-        exerciseDB.push({ name, method: '', hasMethod: false });
-      } catch(e) { console.error(e); }
+        await setDoc(doc(db,'exercise_db',name), { name, method:'', hasMethod:false, createdAt:new Date().toISOString() });
+        exerciseDB.push({ name, method:'', hasMethod:false });
+      } catch(e) {}
     }
-    if (newNames.length > 0) {
-      exerciseDB.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-      console.log('✅ 운동DB 자동 추가:', newNames);
-    }
+    if (newNames.length > 0) exerciseDB.sort((a,b) => a.name.localeCompare(b.name,'ko'));
   }
 
-  let members = {};
-  let loggedInTutor = '';
-  let currentMember = '', currentDateStr = '', lastResult = '';
+  // ── 템플릿 (LocalStorage) ─────────────────────
+  function loadTemplates() { try { return JSON.parse(localStorage.getItem('pt-templates-'+loggedInTutor)||'[]'); } catch(e) { return []; } }
+  function saveTemplates(tpls) { localStorage.setItem('pt-templates-'+loggedInTutor, JSON.stringify(tpls)); }
+
+  function renderTemplates() {
+    const tpls = loadTemplates();
+    const list = document.getElementById('template-list');
+    if (tpls.length === 0) {
+      list.innerHTML = '<span style="font-size:12px;color:#bbb">저장된 템플릿이 없어요. 운동 입력 후 저장해보세요</span>';
+      return;
+    }
+    list.innerHTML = '';
+    tpls.forEach((tpl, idx) => {
+      const chip = document.createElement('div'); chip.className = 'template-chip';
+      chip.innerHTML = `<span onclick="applyTemplate(${idx})">${tpl.name}</span><span class="template-chip-del" onclick="deleteTemplate(${idx})">✕</span>`;
+      list.appendChild(chip);
+    });
+  }
+
+  window.openSaveTemplateModal = function() {
+    document.getElementById('tpl-name-input').value = '';
+    document.getElementById('tpl-save-modal').classList.add('open');
+    setTimeout(() => document.getElementById('tpl-name-input').focus(), 100);
+  };
+  window.closeSaveTemplateModal = function() { document.getElementById('tpl-save-modal').classList.remove('open'); };
+
+  window.saveTemplate = function() {
+    const name = document.getElementById('tpl-name-input').value.trim();
+    if (!name) { alert('템플릿 이름을 입력해주세요!'); return; }
+    const warmup = getExercises('warmup'), main = getExercises('main'), cooldown = getExercises('cooldown');
+    if (warmup.length === 0 && main.length === 0 && cooldown.length === 0) { alert('운동을 먼저 입력해주세요!'); return; }
+    const tpls = loadTemplates();
+    tpls.push({ name, warmup, main, cooldown });
+    saveTemplates(tpls);
+    closeSaveTemplateModal();
+    renderTemplates();
+    alert('✅ "' + name + '" 템플릿이 저장됐어요!');
+  };
+
+  window.applyTemplate = function(idx) {
+    const tpls = loadTemplates();
+    const tpl = tpls[idx];
+    if (!tpl) return;
+    if (!confirm('"' + tpl.name + '" 템플릿을 불러올까요?\n현재 입력된 내용은 지워져요.')) return;
+    ['warmup','main','cooldown'].forEach(s => { document.getElementById('list-'+s).innerHTML = ''; });
+    tpl.warmup?.forEach(ex => addRow('warmup', ex.name, '', '', '', ex.unit||'회'));
+    tpl.main?.forEach(ex   => addRow('main',   ex.name, '', '', '', ex.unit||'회'));
+    tpl.cooldown?.forEach(ex => addRow('cooldown', ex.name, '', '', '', ex.unit||'회'));
+    switchTab('warmup');
+    alert('✅ 템플릿을 불러왔어요! 중량/세트/횟수를 입력해주세요');
+  };
+
+  window.deleteTemplate = function(idx) {
+    const tpls = loadTemplates();
+    if (!confirm('"' + tpls[idx].name + '" 템플릿을 삭제할까요?')) return;
+    tpls.splice(idx, 1);
+    saveTemplates(tpls);
+    renderTemplates();
+  };
+
+  // ── 자동완성 ─────────────────────────────────
+  function showAutocomplete(input, value) {
+    const wrap = input.closest('.exercise-name-wrap');
+    let acList = wrap.querySelector('.autocomplete-list');
+    if (!acList) { acList = document.createElement('div'); acList.className = 'autocomplete-list'; wrap.appendChild(acList); }
+    if (!value.trim()) { acList.classList.remove('show'); return; }
+    const matches = exerciseDB.filter(e => e.name.toLowerCase().includes(value.toLowerCase())).slice(0, 8);
+    if (matches.length === 0) { acList.classList.remove('show'); return; }
+    acList.innerHTML = '';
+    matches.forEach(ex => {
+      const item = document.createElement('div'); item.className = 'autocomplete-item';
+      item.innerHTML = `<div class="ac-name">${ex.name}</div>${ex.method ? '<div class="ac-method">'+ex.method+'</div>' : ''}`;
+      item.onclick = () => {
+        input.value = ex.name;
+        acList.classList.remove('show');
+        checkExerciseHintByName(input, ex.name);
+        // 다음 입력칸(중량)으로 포커스 이동
+        const row = input.closest('.exercise-row');
+        const weightInput = row.querySelectorAll('input')[1];
+        if (weightInput) weightInput.focus();
+      };
+      acList.appendChild(item);
+    });
+    acList.classList.add('show');
+  }
+
+  function hideAllAutocomplete() {
+    document.querySelectorAll('.autocomplete-list').forEach(el => el.classList.remove('show'));
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.exercise-name-wrap')) hideAllAutocomplete();
+  });
+
+  // ── 상태 ─────────────────────────────────────
+  let members = {}, loggedInTutor = '', currentMember = '', currentDateStr = '', lastResult = '';
   let recognition = null, isListening = false, currentTab = 'warmup';
   let feedbackRecognition = null, isFeedbackListening = false;
   let memoRecognition = null, isMemoListening = false, activeMemoBtn = null;
   let selectedDate = new Date(), calViewYear = new Date().getFullYear(), calViewMonth = new Date().getMonth();
   let growthChartWeight = null, growthChartReps = null, lessonChart = null;
-  let currentReportPeriod = 'month';
-  let loginSelectedTutor = '';
+  let currentReportPeriod = 'month', loginSelectedTutor = '', dbEditingName = null;
 
   // ── 로그인 ────────────────────────────────────
   window.selectLoginTutor = function(name, btn) {
@@ -486,9 +590,9 @@
     errEl.textContent = '확인 중...';
     try {
       let correctPw = DEFAULT_PW;
-      try { const snap = await getDoc(doc(db,'tutor_passwords',loginSelectedTutor)); if(snap.exists()) correctPw = snap.data().password || DEFAULT_PW; } catch(e) {}
-      if (pw === correctPw) { await onLoginSuccess(loginSelectedTutor); }
-      else { errEl.textContent = '비밀번호가 틀렸어요'; }
+      try { const snap = await getDoc(doc(db,'tutor_passwords',loginSelectedTutor)); if(snap.exists()) correctPw = snap.data().password||DEFAULT_PW; } catch(e) {}
+      if (pw === correctPw) await onLoginSuccess(loginSelectedTutor);
+      else errEl.textContent = '비밀번호가 틀렸어요';
     } catch(e) { errEl.textContent = '오류가 발생했어요. 다시 시도해주세요'; }
   };
   async function onLoginSuccess(tutorName) {
@@ -503,6 +607,7 @@
     await loadExerciseDBFromFirebase();
     await saveMemberSnapshot();
     renderMembers();
+    renderTemplates();
     showScreen('member');
   }
   window.doLogout = function() {
@@ -525,14 +630,11 @@
     try {
       const q = query(collection(db,'members'), where('tutor','==',loggedInTutor));
       const snap = await getDocs(q);
-      snap.docs.forEach(d => {
-        const data = d.data();
-        members[loggedInTutor].push({ id: d.id, name: data.name, order: data.order || 0 });
-      });
-      members[loggedInTutor].sort((a, b) => a.order - b.order);
+      snap.docs.forEach(d => { const data = d.data(); members[loggedInTutor].push({ id:d.id, name:data.name, order:data.order||0 }); });
+      members[loggedInTutor].sort((a,b) => a.order - b.order);
     } catch(e) { console.error(e); }
   }
-  function getMyMembers() { return members[loggedInTutor] || []; }
+  function getMyMembers() { return members[loggedInTutor]||[]; }
   function getMyMemberNames() { return getMyMembers().map(m => m.name); }
 
   async function saveMemberSnapshot() {
@@ -540,10 +642,8 @@
     const ym = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
     for (const tutor of TUTORS) {
       try {
-        let count = 0;
-        if (tutor === loggedInTutor) { count = getMyMemberNames().length; }
-        else { const q = query(collection(db,'members'), where('tutor','==',tutor)); const s = await getDocs(q); count = s.size; }
-        await setDoc(doc(db,'member_snapshots',tutor+'_'+ym), { tutor, yearMonth: ym, count, updatedAt: new Date().toISOString() });
+        let count = tutor === loggedInTutor ? getMyMemberNames().length : (await getDocs(query(collection(db,'members'), where('tutor','==',tutor)))).size;
+        await setDoc(doc(db,'member_snapshots',tutor+'_'+ym), { tutor, yearMonth:ym, count, updatedAt:new Date().toISOString() });
       } catch(e) {}
     }
   }
@@ -586,27 +686,22 @@
     for (let d = 1; d <= lastDate; d++) {
       const el = document.createElement('div'); const dow = (firstDay+d-1)%7;
       let cls = 'cal-day';
-      if (dow === 0) cls += ' sun'; if (dow === 6) cls += ' sat';
-      if (d === today.getDate() && calViewMonth === today.getMonth() && calViewYear === today.getFullYear()) cls += ' today';
-      if (d === selectedDate.getDate() && calViewMonth === selectedDate.getMonth() && calViewYear === selectedDate.getFullYear()) cls += ' selected';
+      if (dow===0) cls+=' sun'; if (dow===6) cls+=' sat';
+      if (d===today.getDate()&&calViewMonth===today.getMonth()&&calViewYear===today.getFullYear()) cls+=' today';
+      if (d===selectedDate.getDate()&&calViewMonth===selectedDate.getMonth()&&calViewYear===selectedDate.getFullYear()) cls+=' selected';
       el.className = cls; el.textContent = d; el.onclick = () => selectDate(d); grid.appendChild(el);
     }
   }
-  function selectDate(d) { selectedDate = new Date(calViewYear, calViewMonth, d); updateDateDisplay(); document.getElementById('calendar-wrap').classList.remove('open'); }
+  function selectDate(d) { selectedDate = new Date(calViewYear,calViewMonth,d); updateDateDisplay(); document.getElementById('calendar-wrap').classList.remove('open'); }
 
   // ── 회원 목록 ────────────────────────────────
   function renderMembers() {
     document.getElementById('tutor-name-display').textContent = loggedInTutor + ' 튜터';
     const list = document.getElementById('member-list'); list.innerHTML = '';
     const myMembers = getMyMembers();
-    const countEl = document.createElement('p');
-    countEl.style.cssText = 'font-size:13px;color:#2d6a4f;font-weight:bold;margin-bottom:12px;';
-    countEl.textContent = '총 ' + myMembers.length + '명';
+    const countEl = document.createElement('p'); countEl.style.cssText = 'font-size:13px;color:#2d6a4f;font-weight:bold;margin-bottom:12px;'; countEl.textContent = '총 '+myMembers.length+'명';
     list.appendChild(countEl);
-    if (myMembers.length === 0) {
-      const p = document.createElement('p'); p.style.cssText = 'color:#aaa;font-size:14px;margin-bottom:12px;'; p.textContent = '아직 등록된 회원이 없어요';
-      list.appendChild(p); return;
-    }
+    if (myMembers.length === 0) { const p = document.createElement('p'); p.style.cssText='color:#aaa;font-size:14px;margin-bottom:12px;'; p.textContent='아직 등록된 회원이 없어요'; list.appendChild(p); return; }
     myMembers.forEach((memberObj, idx) => {
       const row = document.createElement('div'); row.className = 'member-row';
       const nb = document.createElement('button'); nb.className = 'name-btn'; nb.textContent = memberObj.name; nb.onclick = () => selectMember(memberObj.name);
@@ -618,20 +713,15 @@
     const name = prompt('새 회원 이름을 입력하세요:');
     if (name && name.trim()) {
       try {
-        const docRef = await addDoc(collection(db,'members'), { tutor: loggedInTutor, name: name.trim(), order: Date.now(), createdAt: new Date().toISOString() });
-        members[loggedInTutor].push({ id: docRef.id, name: name.trim(), order: Date.now() });
+        const docRef = await addDoc(collection(db,'members'), { tutor:loggedInTutor, name:name.trim(), order:Date.now(), createdAt:new Date().toISOString() });
+        members[loggedInTutor].push({ id:docRef.id, name:name.trim(), order:Date.now() });
         await saveMemberSnapshot(); renderMembers();
-      } catch(e) { console.error(e); alert('저장 중 오류가 발생했어요.'); }
+      } catch(e) { alert('저장 중 오류가 발생했어요.'); }
     }
   };
   async function deleteMember(docId, idx) {
-    const name = getMyMembers()[idx]?.name;
-    if (confirm(name + ' 회원을 삭제할까요?')) {
-      try {
-        if (docId) await deleteDoc(doc(db,'members',docId));
-        members[loggedInTutor].splice(idx, 1);
-        await saveMemberSnapshot(); renderMembers();
-      } catch(e) { console.error(e); }
+    if (confirm(getMyMembers()[idx]?.name + ' 회원을 삭제할까요?')) {
+      try { if(docId) await deleteDoc(doc(db,'members',docId)); members[loggedInTutor].splice(idx,1); await saveMemberSnapshot(); renderMembers(); } catch(e) {}
     }
   }
   function selectMember(name) {
@@ -641,6 +731,7 @@
     updateDateDisplay();
     ['warmup','main','cooldown'].forEach(s => { document.getElementById('list-'+s).innerHTML = ''; });
     document.getElementById('feedback-msg').value = '';
+    renderTemplates();
     addRow('warmup'); addRow('main'); switchTab('warmup'); showScreen('exercise');
   }
 
@@ -648,16 +739,22 @@
   window.switchTab = function(name) {
     currentTab = name;
     ['warmup','main','cooldown'].forEach(t => {
-      document.getElementById('tab-'+t).classList.toggle('active', t === name);
-      document.getElementById('panel-'+t).classList.toggle('active', t === name);
+      document.getElementById('tab-'+t).classList.toggle('active', t===name);
+      document.getElementById('panel-'+t).classList.toggle('active', t===name);
     });
   };
 
-  // ── 운동 행 ──────────────────────────────────
+  // ── 운동 행 (자동완성 포함) ───────────────────
   window.addRow = function(section, name='', weight='', sets='', reps='', unit='회', memo='') {
     const row = document.createElement('div'); row.className = 'exercise-row';
     row.innerHTML = `
-      <input type="text" placeholder="예) 스쿼트" value="${name}" oninput="checkExerciseHint(this)" />
+      <div class="exercise-name-wrap">
+        <input type="text" placeholder="예) 스쿼트" value="${name}"
+          oninput="onExerciseNameInput(this)"
+          onfocus="onExerciseNameInput(this)"
+          onkeydown="onExerciseNameKey(event,this)" />
+        <div class="autocomplete-list"></div>
+      </div>
       <input type="number" placeholder="60" min="0" value="${weight}" />
       <input type="number" placeholder="3" min="1" value="${sets}" />
       <div class="reps-wrap">
@@ -676,6 +773,30 @@
     document.getElementById('list-'+section).appendChild(row);
     if (name) checkExerciseHintByName(row.querySelector('input[type=text]'), name);
   };
+
+  window.onExerciseNameInput = function(input) {
+    showAutocomplete(input, input.value);
+    checkExerciseHintByName(input, input.value.trim());
+  };
+  window.onExerciseNameKey = function(e, input) {
+    const list = input.closest('.exercise-name-wrap').querySelector('.autocomplete-list');
+    const items = list.querySelectorAll('.autocomplete-item');
+    const active = list.querySelector('.autocomplete-item.active');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!active) { items[0]?.classList.add('active'); }
+      else { active.classList.remove('active'); (active.nextElementSibling || items[0])?.classList.add('active'); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!active) { items[items.length-1]?.classList.add('active'); }
+      else { active.classList.remove('active'); (active.previousElementSibling || items[items.length-1])?.classList.add('active'); }
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+      if (active) { e.preventDefault(); active.click(); }
+    } else if (e.key === 'Escape') {
+      list.classList.remove('show');
+    }
+  };
+
   window.toggleUnit = function(btn) { btn.textContent = btn.textContent === '회' ? '초' : '회'; };
   window.checkExerciseHint = function(input) { checkExerciseHintByName(input, input.value.trim()); };
   function checkExerciseHintByName(input, name) {
@@ -687,25 +808,25 @@
   window.useHint = function(btn) {
     const method = btn.closest('.exercise-hint').querySelector('.hint-text').textContent;
     const cur = document.getElementById('feedback-msg').value.trim();
-    document.getElementById('feedback-msg').value = cur ? cur + '\n' + method : method;
+    document.getElementById('feedback-msg').value = cur ? cur+'\n'+method : method;
     btn.closest('.exercise-hint').classList.remove('show');
   };
 
   // ── 메모 음성 ────────────────────────────────
   window.toggleMemoVoice = function(btn) {
-    if (isMemoListening) { stopMemoVoice(); }
+    if (isMemoListening) stopMemoVoice();
     else { if (activeMemoBtn && activeMemoBtn !== btn) stopMemoVoice(); startMemoVoice(btn); }
   };
   function startMemoVoice(btn) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { alert('Chrome 브라우저를 사용해 주세요!'); return; }
     const textarea = btn.parentElement.querySelector('.exercise-memo');
-    memoRecognition = new SR(); memoRecognition.lang = 'ko-KR'; memoRecognition.continuous = true; memoRecognition.interimResults = true;
+    memoRecognition = new SR(); memoRecognition.lang='ko-KR'; memoRecognition.continuous=true; memoRecognition.interimResults=true;
     let finalText = textarea.value; activeMemoBtn = btn;
-    memoRecognition.onstart = () => { isMemoListening = true; btn.textContent = '⏹'; btn.classList.add('listening'); };
+    memoRecognition.onstart = () => { isMemoListening=true; btn.textContent='⏹'; btn.classList.add('listening'); };
     memoRecognition.onresult = (e) => {
       let interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) { if (e.results[i].isFinal) finalText += e.results[i][0].transcript; else interim = e.results[i][0].transcript; }
+      for (let i=e.resultIndex; i<e.results.length; i++) { if(e.results[i].isFinal) finalText+=e.results[i][0].transcript; else interim=e.results[i][0].transcript; }
       textarea.value = finalText + interim;
     };
     memoRecognition.onerror = () => stopMemoVoice();
@@ -714,159 +835,179 @@
   }
   function stopMemoVoice() {
     isMemoListening = false; if (memoRecognition) memoRecognition.stop();
-    if (activeMemoBtn) { activeMemoBtn.textContent = '🎤'; activeMemoBtn.classList.remove('listening'); activeMemoBtn = null; }
+    if (activeMemoBtn) { activeMemoBtn.textContent='🎤'; activeMemoBtn.classList.remove('listening'); activeMemoBtn=null; }
   }
 
   // ── 운동 DB 렌더링 ────────────────────────────
   window.renderDB = function() {
-    const searchVal = (document.getElementById('db-search')?.value || '').trim().toLowerCase();
+    const searchVal = (document.getElementById('db-search')?.value||'').trim().toLowerCase();
     const list = document.getElementById('db-list');
     const badge = document.getElementById('db-count-badge');
     const filtered = searchVal ? exerciseDB.filter(e => e.name.toLowerCase().includes(searchVal)) : exerciseDB;
     const withMethod = exerciseDB.filter(e => e.hasMethod).length;
-    const without = exerciseDB.length - withMethod;
-    if (badge) badge.textContent = `총 ${exerciseDB.length}개 · 방법 등록됨 ${withMethod}개 · 미등록 ${without}개`;
+    if (badge) badge.textContent = `총 ${exerciseDB.length}개 · 방법 등록됨 ${withMethod}개 · 미등록 ${exerciseDB.length-withMethod}개`;
     list.innerHTML = '';
-    if (filtered.length === 0) {
-      list.innerHTML = '<p style="color:#aaa;font-size:14px;text-align:center;padding:20px 0">' + (searchVal ? '검색 결과가 없어요' : '아직 등록된 운동이 없어요') + '</p>';
-      return;
-    }
+    if (filtered.length === 0) { list.innerHTML = `<p style="color:#aaa;font-size:14px;text-align:center;padding:20px 0">${searchVal?'검색 결과가 없어요':'아직 등록된 운동이 없어요'}</p>`; return; }
     filtered.forEach(ex => {
       const item = document.createElement('div'); item.className = 'db-item';
       item.innerHTML = `
         <div class="db-item-header">
-          <span class="db-item-name">${ex.name}${!ex.hasMethod ? '<span class="db-new-badge">방법 미등록</span>' : ''}</span>
+          <span class="db-item-name">${ex.name}${!ex.hasMethod?'<span class="db-new-badge">방법 미등록</span>':''}</span>
           <div class="db-item-btns">
-            <button class="db-edit-btn" onclick="openDbModal('${ex.name.replace(/'/g,"\\'")}')">✏️ 방법 ${ex.hasMethod?'수정':'등록'}</button>
+            <button class="db-edit-btn" onclick="openDbModal('${ex.name.replace(/'/g,"\\'")}')">✏️ ${ex.hasMethod?'수정':'등록'}</button>
             <button class="db-del-btn" onclick="deleteFromDB('${ex.name.replace(/'/g,"\\'")}')">삭제</button>
           </div>
         </div>
-        ${ex.method ? `<div class="db-item-method">${ex.method}</div>` : `<div class="db-item-no-method">운동 방법이 아직 등록되지 않았어요. ✏️ 버튼으로 등록하세요</div>`}`;
+        ${ex.method ? `<div class="db-item-method">${ex.method}</div>` : `<div class="db-item-no-method">운동 방법이 아직 등록되지 않았어요</div>`}`;
       list.appendChild(item);
     });
   };
 
-  // ── 운동 DB 모달 ──────────────────────────────
-  window.openDbModal = function(name = null) {
+  window.openDbModal = function(name=null) {
     dbEditingName = name;
     const titleEl = document.getElementById('db-modal-title');
     const nameWrap = document.getElementById('db-modal-name-wrap');
     const methodEl = document.getElementById('db-modal-method');
     if (name) {
-      // 기존 운동 방법 수정
-      titleEl.textContent = '운동 방법 ' + (exerciseDB.find(e=>e.name===name)?.hasMethod ? '수정' : '등록');
-      nameWrap.innerHTML = `<div class="modal-name-readonly">🏋️ ${name}</div>`;
       const found = exerciseDB.find(e => e.name === name);
+      titleEl.textContent = '운동 방법 ' + (found?.hasMethod ? '수정' : '등록');
+      nameWrap.innerHTML = `<div class="modal-name-readonly">🏋️ ${name}</div>`;
       methodEl.value = found?.method || '';
     } else {
-      // 새 운동 직접 추가
       titleEl.textContent = '운동 직접 추가';
       nameWrap.innerHTML = `<input type="text" id="db-modal-new-name" placeholder="운동 이름 입력 (예: 바벨 백 스쿼트)" />`;
       methodEl.value = '';
     }
     document.getElementById('db-modal-overlay').classList.add('open');
-    setTimeout(() => { if (!name) document.getElementById('db-modal-new-name')?.focus(); else methodEl.focus(); }, 100);
+    setTimeout(() => { if(!name) document.getElementById('db-modal-new-name')?.focus(); else methodEl.focus(); }, 100);
   };
-
   window.closeDbModal = function() { document.getElementById('db-modal-overlay').classList.remove('open'); };
-
   window.saveDbModal = async function() {
-    const methodEl = document.getElementById('db-modal-method');
-    const method = methodEl.value.trim();
+    const method = document.getElementById('db-modal-method').value.trim();
     if (dbEditingName) {
-      // 기존 운동 방법 저장
       try {
-        await setDoc(doc(db, 'exercise_db', dbEditingName), {
-          name: dbEditingName, method, hasMethod: method.length > 0, updatedAt: new Date().toISOString()
-        });
-        const idx = exerciseDB.findIndex(e => e.name === dbEditingName);
-        if (idx !== -1) { exerciseDB[idx].method = method; exerciseDB[idx].hasMethod = method.length > 0; }
+        await setDoc(doc(db,'exercise_db',dbEditingName), { name:dbEditingName, method, hasMethod:method.length>0, updatedAt:new Date().toISOString() });
+        const idx = exerciseDB.findIndex(e => e.name===dbEditingName);
+        if (idx!==-1) { exerciseDB[idx].method=method; exerciseDB[idx].hasMethod=method.length>0; }
         closeDbModal(); renderDB();
-      } catch(e) { console.error(e); alert('저장 중 오류가 발생했어요.'); }
+      } catch(e) { alert('저장 중 오류가 발생했어요.'); }
     } else {
-      // 새 운동 직접 추가
       const nameEl = document.getElementById('db-modal-new-name');
       const name = nameEl?.value.trim();
       if (!name) { alert('운동 이름을 입력해주세요!'); return; }
-      // 중복 확인
-      if (exerciseDB.find(e => e.name.toLowerCase() === name.toLowerCase())) {
-        alert('이미 등록된 운동 이름이에요!'); return;
-      }
+      if (exerciseDB.find(e => e.name.toLowerCase()===name.toLowerCase())) { alert('이미 등록된 운동 이름이에요!'); return; }
       try {
-        await setDoc(doc(db, 'exercise_db', name), {
-          name, method, hasMethod: method.length > 0, createdAt: new Date().toISOString()
-        });
-        exerciseDB.push({ name, method, hasMethod: method.length > 0 });
-        exerciseDB.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+        await setDoc(doc(db,'exercise_db',name), { name, method, hasMethod:method.length>0, createdAt:new Date().toISOString() });
+        exerciseDB.push({ name, method, hasMethod:method.length>0 });
+        exerciseDB.sort((a,b) => a.name.localeCompare(b.name,'ko'));
         closeDbModal(); renderDB();
-      } catch(e) { console.error(e); alert('저장 중 오류가 발생했어요.'); }
+      } catch(e) { alert('저장 중 오류가 발생했어요.'); }
     }
   };
-
   window.deleteFromDB = async function(name) {
-    if (confirm(name + ' 운동을 DB에서 삭제할까요?')) {
-      try {
-        await deleteDoc(doc(db, 'exercise_db', name));
-        exerciseDB = exerciseDB.filter(e => e.name !== name);
-        renderDB();
-      } catch(e) { console.error(e); }
+    if (confirm(name+' 운동을 DB에서 삭제할까요?')) {
+      try { await deleteDoc(doc(db,'exercise_db',name)); exerciseDB=exerciseDB.filter(e=>e.name!==name); renderDB(); } catch(e) {}
     }
   };
 
-  // ── 음성 인식 ────────────────────────────────
+  // ── 음성 인식 (개선된 파싱) ───────────────────
   window.toggleVoice = function() { isListening ? stopVoice() : startVoice(); };
   function startVoice() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { alert('Chrome 브라우저를 사용해 주세요!'); return; }
-    recognition = new SR(); recognition.lang = 'ko-KR'; recognition.continuous = false; recognition.interimResults = false;
-    recognition.onstart = () => { isListening = true; document.getElementById('mic-btn').classList.add('listening'); document.getElementById('mic-btn').textContent = '⏹'; document.getElementById('voice-status').textContent = '🔴 듣고 있어요!'; document.getElementById('voice-status').classList.add('active'); };
-    recognition.onresult = (e) => { const t = e.results[0][0].transcript; document.getElementById('voice-status').textContent = '인식됨: "'+t+'"'; parseVoiceInput(t); };
-    recognition.onerror = () => { stopVoice(); document.getElementById('voice-status').textContent = '❌ 인식 실패. 다시 눌러보세요!'; };
+    recognition = new SR(); recognition.lang='ko-KR'; recognition.continuous=false; recognition.interimResults=false;
+    recognition.onstart = () => { isListening=true; document.getElementById('mic-btn').classList.add('listening'); document.getElementById('mic-btn').textContent='⏹'; document.getElementById('voice-status').textContent='🔴 듣고 있어요!'; document.getElementById('voice-status').classList.add('active'); };
+    recognition.onresult = (e) => { const t=e.results[0][0].transcript; document.getElementById('voice-status').textContent='인식됨: "'+t+'"'; parseVoiceInput(t); };
+    recognition.onerror = () => { stopVoice(); document.getElementById('voice-status').textContent='❌ 인식 실패. 다시 눌러보세요!'; };
     recognition.onend = () => stopVoice(); recognition.start();
   }
   function stopVoice() {
-    isListening = false; if (recognition) recognition.stop();
-    document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('mic-btn').textContent = '🎤';
+    isListening=false; if(recognition) recognition.stop();
+    document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('mic-btn').textContent='🎤';
     document.getElementById('voice-status').classList.remove('active');
   }
   window.toggleFeedbackVoice = function() { isFeedbackListening ? stopFeedbackVoice() : startFeedbackVoice(); };
   function startFeedbackVoice() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { alert('Chrome 브라우저를 사용해 주세요!'); return; }
-    feedbackRecognition = new SR(); feedbackRecognition.lang = 'ko-KR'; feedbackRecognition.continuous = true; feedbackRecognition.interimResults = true;
+    feedbackRecognition = new SR(); feedbackRecognition.lang='ko-KR'; feedbackRecognition.continuous=true; feedbackRecognition.interimResults=true;
     let finalText = document.getElementById('feedback-msg').value;
-    feedbackRecognition.onstart = () => { isFeedbackListening = true; const btn = document.getElementById('feedback-mic-btn'); btn.textContent = '⏹ 중지'; btn.classList.add('listening'); };
+    feedbackRecognition.onstart = () => { isFeedbackListening=true; const btn=document.getElementById('feedback-mic-btn'); btn.textContent='⏹ 중지'; btn.classList.add('listening'); };
     feedbackRecognition.onresult = (e) => {
-      let interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) { if (e.results[i].isFinal) finalText += e.results[i][0].transcript; else interim = e.results[i][0].transcript; }
-      document.getElementById('feedback-msg').value = finalText + interim;
+      let interim='';
+      for (let i=e.resultIndex; i<e.results.length; i++) { if(e.results[i].isFinal) finalText+=e.results[i][0].transcript; else interim=e.results[i][0].transcript; }
+      document.getElementById('feedback-msg').value = finalText+interim;
     };
     feedbackRecognition.onerror = () => stopFeedbackVoice();
-    feedbackRecognition.onend = () => { if (isFeedbackListening) feedbackRecognition.start(); };
+    feedbackRecognition.onend = () => { if(isFeedbackListening) feedbackRecognition.start(); };
     feedbackRecognition.start();
   }
   function stopFeedbackVoice() {
-    isFeedbackListening = false; if (feedbackRecognition) feedbackRecognition.stop();
-    const btn = document.getElementById('feedback-mic-btn'); btn.textContent = '🎤 음성 입력'; btn.classList.remove('listening');
+    isFeedbackListening=false; if(feedbackRecognition) feedbackRecognition.stop();
+    const btn=document.getElementById('feedback-mic-btn'); btn.textContent='🎤 음성 입력'; btn.classList.remove('listening');
   }
+
+  // ✅ 개선된 음성 파싱 - 운동 이름의 한자어를 숫자로 변환하지 않음
   function parseVoiceInput(text) {
-    const numMap = {'영':0,'일':1,'이':2,'삼':3,'사':4,'오':5,'육':6,'칠':7,'팔':8,'구':9,'십':10,'십일':11,'십이':12,'십삼':13,'십사':14,'십오':15,'십육':16,'십칠':17,'십팔':18,'십구':19,'이십':20,'삼십':30,'사십':40,'오십':50,'육십':60,'칠십':70,'팔십':80,'구십':90,'백':100,'백오십':150,'이백':200};
-    const isSec = /초/.test(text); let t = text;
-    Object.keys(numMap).sort((a,b) => b.length-a.length).forEach(k => { t = t.replace(new RegExp(k,'g'), numMap[k]); });
-    t = t.replace(/킬로그램|킬로그|킬로|키로그램|키로그|키로/g, '');
-    const nums = t.match(/\d+/g) || [];
-    let exName = t.replace(/\d+/g,'').replace(/세트|회|번|번씩|개|kg|킬|키|초/g,'').replace(/\s+/g,' ').trim();
-    const nm = text.match(/^([가-힣\s]+?)(?=\s*(?:영|일|이|삼|사|오십|육십|칠십|팔십|구십|오|육|칠|팔|구|십|백|\d))/);
-    if (nm && nm[1].trim().length > 0) exName = nm[1].trim();
+    // 숫자 단위 패턴 - 운동 이름 뒤의 숫자만 변환
+    // 핵심: 운동 이름을 먼저 추출하고, 그 이후만 숫자 변환
+    const isSec = /초/.test(text);
+
+    // 1단계: 운동 DB에서 먼저 매칭 시도 (가장 긴 이름부터)
+    const sortedDB = [...exerciseDB].sort((a,b) => b.name.length - a.name.length);
+    let exName = '';
+    let remaining = text;
+    for (const ex of sortedDB) {
+      if (text.startsWith(ex.name)) {
+        exName = ex.name;
+        remaining = text.slice(ex.name.length).trim();
+        break;
+      }
+    }
+
+    // 2단계: DB 매칭 실패 시 패턴으로 추출
+    // 숫자/단위 키워드가 나오기 전까지를 운동 이름으로 간주
+    if (!exName) {
+      // 순수 숫자 또는 단위 키워드가 나오는 위치 찾기
+      const numUnitPattern = /\d|킬로그램|킬로그|킬로|키로|세트|회|번씩|개(?!\S)|초(?!\S)/;
+      const match = text.search(numUnitPattern);
+      if (match > 0) {
+        exName = text.slice(0, match).trim();
+        remaining = text.slice(match).trim();
+      } else {
+        // 숫자/단위가 없으면 전체가 운동 이름
+        exName = text.trim();
+        remaining = '';
+      }
+    }
+
+    // 3단계: remaining에서만 숫자 변환
+    const numMap = {'영':0,'일':1,'이':2,'삼':3,'사':4,'오':5,'육':6,'칠':7,'팔':8,'구':9,
+      '십':10,'십일':11,'십이':12,'십삼':13,'십사':14,'십오':15,'십육':16,'십칠':17,'십팔':18,'십구':19,
+      '이십':20,'삼십':30,'사십':40,'오십':50,'육십':60,'칠십':70,'팔십':80,'구십':90,
+      '백':100,'백오십':150,'이백':200,'이백오십':250,'삼백':300};
+    let converted = remaining;
+    Object.keys(numMap).sort((a,b) => b.length-a.length).forEach(k => {
+      converted = converted.replace(new RegExp(k, 'g'), numMap[k]);
+    });
+    converted = converted.replace(/킬로그램|킬로그|킬로|키로그램|키로그|키로/g, '');
+    const nums = converted.match(/\d+/g) || [];
     const weight = nums[0]||'', sets = nums[1]||'', reps = nums[2]||'', unit = isSec ? '초' : '회';
+
     if (exName || weight) {
-      const listId = 'list-'+currentTab; const rows = document.querySelectorAll('#'+listId+' .exercise-row');
-      const lastRow = rows[rows.length-1]; const lastInputs = lastRow ? lastRow.querySelectorAll('input') : null;
-      if (lastInputs && !lastInputs[0].value.trim()) {
-        lastInputs[0].value = exName; lastInputs[1].value = weight; lastInputs[2].value = sets; lastInputs[3].value = reps;
-        const ub = lastRow.querySelector('.unit-toggle'); if (ub) ub.textContent = unit;
-        checkExerciseHintByName(lastInputs[0], exName);
-      } else addRow(currentTab, exName, weight, sets, reps, unit);
+      const listId = 'list-'+currentTab;
+      const rows = document.querySelectorAll('#'+listId+' .exercise-row');
+      const lastRow = rows[rows.length-1];
+      const lastInput = lastRow?.querySelector('.exercise-name-wrap input');
+      if (lastInput && !lastInput.value.trim()) {
+        lastInput.value = exName;
+        const allInputs = lastRow.querySelectorAll('input');
+        allInputs[1].value = weight; allInputs[2].value = sets; allInputs[3].value = reps;
+        const ub = lastRow.querySelector('.unit-toggle'); if(ub) ub.textContent = unit;
+        checkExerciseHintByName(lastInput, exName);
+      } else {
+        addRow(currentTab, exName, weight, sets, reps, unit);
+      }
       document.getElementById('voice-status').textContent = '✅ 입력 완료!';
     }
   }
@@ -876,9 +1017,9 @@
     const rows = document.querySelectorAll('#list-'+section+' .exercise-row'); const list = [];
     rows.forEach(row => {
       const inputs = row.querySelectorAll('input');
-      const name = inputs[0].value.trim(), weight = inputs[1].value.trim(), sets = inputs[2].value.trim(), reps = inputs[3].value.trim();
+      const name=inputs[0].value.trim(), weight=inputs[1].value.trim(), sets=inputs[2].value.trim(), reps=inputs[3].value.trim();
       const unit = row.querySelector('.unit-toggle').textContent.trim();
-      const memo = row.querySelector('.exercise-memo')?.value.trim() || '';
+      const memo = row.querySelector('.exercise-memo')?.value.trim()||'';
       if (name) list.push({ name, weight, sets, reps, unit, memo });
     });
     return list;
@@ -886,60 +1027,37 @@
   function formatExercises(exercises) {
     return exercises.map((ex,i) => {
       let line = (i+1)+'. '+ex.name;
-      if (ex.weight && Number(ex.weight) !== 0) line += '  '+ex.weight+'kg';
-      if (ex.sets   && Number(ex.sets)   !== 0) line += ' / '+ex.sets+'세트';
-      if (ex.reps   && Number(ex.reps)   !== 0) line += ' / '+ex.reps+ex.unit;
-      if (ex.memo)                               line += '\n   💬 '+ex.memo;
+      if (ex.weight&&Number(ex.weight)!==0) line += '  '+ex.weight+'kg';
+      if (ex.sets  &&Number(ex.sets)  !==0) line += ' / '+ex.sets+'세트';
+      if (ex.reps  &&Number(ex.reps)  !==0) line += ' / '+ex.reps+ex.unit;
+      if (ex.memo)                           line += '\n   💬 '+ex.memo;
       return line;
     }).join('\n');
   }
-
   window.saveRecord = async function() {
-    const warmup = getExercises('warmup'), main = getExercises('main'), cooldown = getExercises('cooldown');
-    if (warmup.length === 0 && main.length === 0) { alert('운동을 최소 1개 이상 입력해주세요!'); return; }
+    const warmup=getExercises('warmup'), main=getExercises('main'), cooldown=getExercises('cooldown');
+    if (warmup.length===0&&main.length===0) { alert('운동을 최소 1개 이상 입력해주세요!'); return; }
     stopFeedbackVoice(); stopMemoVoice();
     const now = new Date();
-    const yearMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+    const yearMonth = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
     const feedbackMsg = document.getElementById('feedback-msg').value.trim();
-    const journalId = loggedInTutor + '_' + currentMember + '_' + selectedDate.toISOString().slice(0,10);
-
+    const journalId = loggedInTutor+'_'+currentMember+'_'+selectedDate.toISOString().slice(0,10);
     try {
-      // 일지 저장
-      await setDoc(doc(db,'journals',journalId), {
-        tutor: loggedInTutor, member: currentMember, date: currentDateStr,
-        dateObj: selectedDate.toISOString(), yearMonth, year: String(now.getFullYear()),
-        warmup, main, cooldown, feedback: feedbackMsg, createdAt: new Date().toISOString()
-      });
-      // 운동 기록 저장
+      await setDoc(doc(db,'journals',journalId), { tutor:loggedInTutor, member:currentMember, date:currentDateStr, dateObj:selectedDate.toISOString(), yearMonth, year:String(now.getFullYear()), warmup, main, cooldown, feedback:feedbackMsg, createdAt:new Date().toISOString() });
       for (const ex of [...warmup,...main,...cooldown]) {
-        await addDoc(collection(db,'workout_records'), {
-          member: currentMember, tutor: loggedInTutor, date: currentDateStr,
-          dateObj: selectedDate.toISOString(), exerciseName: ex.name,
-          weight: Number(ex.weight)||0, sets: Number(ex.sets)||0, reps: Number(ex.reps)||0,
-          unit: ex.unit, memo: ex.memo||'', createdAt: new Date()
-        });
+        await addDoc(collection(db,'workout_records'), { member:currentMember, tutor:loggedInTutor, date:currentDateStr, dateObj:selectedDate.toISOString(), exerciseName:ex.name, weight:Number(ex.weight)||0, sets:Number(ex.sets)||0, reps:Number(ex.reps)||0, unit:ex.unit, memo:ex.memo||'', createdAt:new Date() });
       }
-      // 수업 기록 저장
-      await setDoc(doc(db,'lesson_records',journalId), {
-        tutor: loggedInTutor, member: currentMember, date: currentDateStr,
-        dateObj: selectedDate.toISOString(), yearMonth, year: String(now.getFullYear()),
-        createdAt: new Date().toISOString()
-      });
-
-      // ✅ 운동 이름 자동으로 DB에 추가 (새 운동만, 중복 제외)
-      const allExNames = [...warmup,...main,...cooldown].map(e => e.name).filter(n => n);
-      await autoAddExercisesToDB(allExNames);
-
+      await setDoc(doc(db,'lesson_records',journalId), { tutor:loggedInTutor, member:currentMember, date:currentDateStr, dateObj:selectedDate.toISOString(), yearMonth, year:String(now.getFullYear()), createdAt:new Date().toISOString() });
+      await autoAddExercisesToDB([...warmup,...main,...cooldown].map(e=>e.name).filter(n=>n));
     } catch(e) { console.error(e); }
 
-    // 일지 텍스트 생성
     let result = '';
-    result += '📋 ' + currentMember + ' 회원님 운동 일지\n';
-    result += '📅 ' + currentDateStr + '\n';
-    result += '👤 담당 튜터: ' + loggedInTutor + '\n';
-    if (warmup.length > 0)   result += '\n🔥 Warm up\n─────────────────\n' + formatExercises(warmup) + '\n';
-    if (main.length > 0)     result += '\n💪 Main workout\n─────────────────\n' + formatExercises(main) + '\n';
-    if (cooldown.length > 0) result += '\n❄️ Cool down\n─────────────────\n' + formatExercises(cooldown) + '\n';
+    result += '📋 '+currentMember+' 회원님 운동 일지\n';
+    result += '📅 '+currentDateStr+'\n';
+    result += '👤 담당 튜터: '+loggedInTutor+'\n';
+    if (warmup.length>0)   result += '\n🔥 Warm up\n─────────────────\n'+formatExercises(warmup)+'\n';
+    if (main.length>0)     result += '\n💪 Main workout\n─────────────────\n'+formatExercises(main)+'\n';
+    if (cooldown.length>0) result += '\n❄️ Cool down\n─────────────────\n'+formatExercises(cooldown)+'\n';
     result += '─────────────────\n';
     result += feedbackMsg ? feedbackMsg : '✅ 오늘도 수고하셨습니다! 💪';
     lastResult = result;
@@ -948,105 +1066,104 @@
     document.getElementById('copy-btn').classList.remove('copied');
     showScreen('result');
   };
-
   window.copyResult = function() {
     navigator.clipboard.writeText(lastResult).then(() => {
-      const btn = document.getElementById('copy-btn'); btn.textContent = '✅ 복사 완료! 이제 밴드/카톡에 붙여넣으세요'; btn.classList.add('copied');
+      const btn=document.getElementById('copy-btn'); btn.textContent='✅ 복사 완료! 이제 밴드/카톡에 붙여넣으세요'; btn.classList.add('copied');
     }).catch(() => {
-      const el = document.createElement('textarea'); el.value = lastResult; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-      const btn = document.getElementById('copy-btn'); btn.textContent = '✅ 복사 완료!'; btn.classList.add('copied');
+      const el=document.createElement('textarea'); el.value=lastResult; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+      const btn=document.getElementById('copy-btn'); btn.textContent='✅ 복사 완료!'; btn.classList.add('copied');
     });
   };
 
   // ── 일지 조회 ────────────────────────────────
   function loadMemberOptionsForHistory() {
-    const sel = document.getElementById('history-member'); const cur = sel.value;
-    sel.innerHTML = '<option value="">회원 선택</option>';
-    getMyMemberNames().forEach(name => { const opt = document.createElement('option'); opt.value = name; opt.textContent = name; sel.appendChild(opt); });
-    if (cur) sel.value = cur;
+    const sel=document.getElementById('history-member'); const cur=sel.value;
+    sel.innerHTML='<option value="">회원 선택</option>';
+    getMyMemberNames().forEach(name => { const opt=document.createElement('option'); opt.value=name; opt.textContent=name; sel.appendChild(opt); });
+    if (cur) sel.value=cur;
   }
   window.loadHistory = async function() {
-    const member = document.getElementById('history-member').value;
-    const period = document.getElementById('history-period').value;
-    const content = document.getElementById('history-content');
-    if (!member) { content.innerHTML = '<p class="empty-msg">회원을 선택해주세요</p>'; return; }
-    content.innerHTML = '<p class="loading-msg">불러오는 중...</p>';
+    const member=document.getElementById('history-member').value;
+    const period=document.getElementById('history-period').value;
+    const content=document.getElementById('history-content');
+    if (!member) { content.innerHTML='<p class="empty-msg">회원을 선택해주세요</p>'; return; }
+    content.innerHTML='<p class="loading-msg">불러오는 중...</p>';
     try {
-      const q = query(collection(db,'journals'), where('tutor','==',loggedInTutor), where('member','==',member));
-      const snap = await getDocs(q);
-      let journals = snap.docs.map(d => d.data());
-      const now = new Date();
-      if (period === 'month') { const s = new Date(now.getFullYear(),now.getMonth(),1); journals = journals.filter(j => new Date(j.dateObj) >= s); }
-      else if (period === '3month') { const s = new Date(now.getFullYear(),now.getMonth()-3,1); journals = journals.filter(j => new Date(j.dateObj) >= s); }
-      journals.sort((a,b) => new Date(b.dateObj) - new Date(a.dateObj));
-      if (journals.length === 0) { content.innerHTML = '<p class="empty-msg">해당 기간에 일지가 없어요</p>'; return; }
-      let html = '<p style="font-size:13px;color:#888;margin-bottom:12px;">총 ' + journals.length + '개의 일지</p>';
+      const q=query(collection(db,'journals'),where('tutor','==',loggedInTutor),where('member','==',member));
+      const snap=await getDocs(q);
+      let journals=snap.docs.map(d=>d.data());
+      const now=new Date();
+      if (period==='month') { const s=new Date(now.getFullYear(),now.getMonth(),1); journals=journals.filter(j=>new Date(j.dateObj)>=s); }
+      else if (period==='3month') { const s=new Date(now.getFullYear(),now.getMonth()-3,1); journals=journals.filter(j=>new Date(j.dateObj)>=s); }
+      journals.sort((a,b)=>new Date(b.dateObj)-new Date(a.dateObj));
+      if (journals.length===0) { content.innerHTML='<p class="empty-msg">해당 기간에 일지가 없어요</p>'; return; }
+      let html='<p style="font-size:13px;color:#888;margin-bottom:12px;">총 '+journals.length+'개의 일지</p>';
       journals.forEach(j => {
-        const wl = j.warmup||[], ml = j.main||[], cl = j.cooldown||[];
-        html += `<div class="history-item"><div class="history-item-header" onclick="toggleHistory(this)"><div><div class="history-item-date">📅 ${j.date}</div><div class="history-item-meta">운동 ${wl.length+ml.length+cl.length}개</div></div><span style="color:#aaa;font-size:16px">▼</span></div><div class="history-item-body">`;
-        const rs = (label, list) => {
-          if (!list.length) return '';
-          let s = `<div class="history-section-label">${label}</div>`;
-          list.forEach(ex => {
-            s += `<div class="history-exercise">${ex.name}`;
-            if (ex.weight && Number(ex.weight) !== 0) s += ' · ' + ex.weight + 'kg';
-            if (ex.sets   && Number(ex.sets)   !== 0) s += ' / ' + ex.sets + '세트';
-            if (ex.reps   && Number(ex.reps)   !== 0) s += ' / ' + ex.reps + ex.unit;
-            if (ex.memo) s += '<br><span style="color:#888;font-size:12px">💬 ' + ex.memo + '</span>';
-            s += '</div>';
+        const wl=j.warmup||[], ml=j.main||[], cl=j.cooldown||[];
+        html+=`<div class="history-item"><div class="history-item-header" onclick="toggleHistory(this)"><div><div class="history-item-date">📅 ${j.date}</div><div class="history-item-meta">운동 ${wl.length+ml.length+cl.length}개</div></div><span style="color:#aaa;font-size:16px">▼</span></div><div class="history-item-body">`;
+        const rs=(label,list)=>{
+          if(!list.length) return '';
+          let s=`<div class="history-section-label">${label}</div>`;
+          list.forEach(ex=>{
+            s+=`<div class="history-exercise">${ex.name}`;
+            if(ex.weight&&Number(ex.weight)!==0) s+=' · '+ex.weight+'kg';
+            if(ex.sets&&Number(ex.sets)!==0)     s+=' / '+ex.sets+'세트';
+            if(ex.reps&&Number(ex.reps)!==0)     s+=' / '+ex.reps+ex.unit;
+            if(ex.memo) s+='<br><span style="color:#888;font-size:12px">💬 '+ex.memo+'</span>';
+            s+='</div>';
           });
           return s;
         };
-        html += rs('🔥 Warm up', wl) + rs('💪 Main workout', ml) + rs('❄️ Cool down', cl);
-        if (j.feedback) html += `<div class="history-feedback">✏️ ${j.feedback}</div>`;
-        html += '</div></div>';
+        html+=rs('🔥 Warm up',wl)+rs('💪 Main workout',ml)+rs('❄️ Cool down',cl);
+        if(j.feedback) html+=`<div class="history-feedback">✏️ ${j.feedback}</div>`;
+        html+='</div></div>';
       });
-      content.innerHTML = html;
-    } catch(e) { content.innerHTML = '<p class="empty-msg">데이터를 불러오는 중 오류가 발생했어요</p>'; console.error(e); }
+      content.innerHTML=html;
+    } catch(e) { content.innerHTML='<p class="empty-msg">데이터를 불러오는 중 오류가 발생했어요</p>'; console.error(e); }
   };
   window.toggleHistory = function(header) {
-    const body = header.nextElementSibling; const arrow = header.querySelector('span');
-    body.classList.toggle('open'); arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
+    const body=header.nextElementSibling; const arrow=header.querySelector('span');
+    body.classList.toggle('open'); arrow.textContent=body.classList.contains('open')?'▲':'▼';
   };
 
   // ── 성장 기록 ─────────────────────────────────
   function loadMemberOptionsForGrowth() {
-    const sel = document.getElementById('growth-member'); const cur = sel.value;
-    sel.innerHTML = '<option value="">회원 선택</option>';
-    getMyMemberNames().forEach(name => { const opt = document.createElement('option'); opt.value = name; opt.textContent = name; sel.appendChild(opt); });
-    if (cur) sel.value = cur;
+    const sel=document.getElementById('growth-member'); const cur=sel.value;
+    sel.innerHTML='<option value="">회원 선택</option>';
+    getMyMemberNames().forEach(name=>{const opt=document.createElement('option');opt.value=name;opt.textContent=name;sel.appendChild(opt);});
+    if(cur) sel.value=cur;
   }
   window.onGrowthMemberChange = async function() {
-    const member = document.getElementById('growth-member').value;
-    const exSel = document.getElementById('growth-exercise');
-    exSel.innerHTML = '<option value="">운동 선택</option>';
-    document.getElementById('growth-content').innerHTML = '<p class="empty-msg">운동을 선택해주세요</p>';
-    if (!member) return;
+    const member=document.getElementById('growth-member').value;
+    const exSel=document.getElementById('growth-exercise');
+    exSel.innerHTML='<option value="">운동 선택</option>';
+    document.getElementById('growth-content').innerHTML='<p class="empty-msg">운동을 선택해주세요</p>';
+    if(!member) return;
     try {
-      const q = query(collection(db,'workout_records'), where('member','==',member), where('tutor','==',loggedInTutor));
-      const snap = await getDocs(q);
-      const exNames = [...new Set(snap.docs.map(d => d.data().exerciseName))];
-      exNames.forEach(name => { const opt = document.createElement('option'); opt.value = name; opt.textContent = name; exSel.appendChild(opt); });
-    } catch(e) { console.error(e); }
+      const q=query(collection(db,'workout_records'),where('member','==',member),where('tutor','==',loggedInTutor));
+      const snap=await getDocs(q);
+      const exNames=[...new Set(snap.docs.map(d=>d.data().exerciseName))];
+      exNames.forEach(name=>{const opt=document.createElement('option');opt.value=name;opt.textContent=name;exSel.appendChild(opt);});
+    } catch(e){console.error(e);}
   };
   window.loadGrowthData = async function() {
-    const member = document.getElementById('growth-member').value;
-    const exercise = document.getElementById('growth-exercise').value;
-    const period = document.getElementById('growth-period').value;
-    const content = document.getElementById('growth-content');
-    if (!member || !exercise) { content.innerHTML = '<p class="empty-msg">회원과 운동을 선택해주세요</p>'; return; }
-    content.innerHTML = '<p class="loading-msg">불러오는 중...</p>';
+    const member=document.getElementById('growth-member').value;
+    const exercise=document.getElementById('growth-exercise').value;
+    const period=document.getElementById('growth-period').value;
+    const content=document.getElementById('growth-content');
+    if(!member||!exercise){content.innerHTML='<p class="empty-msg">회원과 운동을 선택해주세요</p>';return;}
+    content.innerHTML='<p class="loading-msg">불러오는 중...</p>';
     try {
-      const q = query(collection(db,'workout_records'), where('member','==',member), where('tutor','==',loggedInTutor));
-      const snap = await getDocs(q);
-      let records = snap.docs.map(d => d.data()).filter(r => r.exerciseName === exercise);
-      records.sort((a,b) => new Date(a.dateObj) - new Date(b.dateObj));
-      const now = new Date();
-      if (period === 'week')  { const c = new Date(now); c.setDate(now.getDate()-7); records = records.filter(r => new Date(r.dateObj) >= c); }
-      if (period === 'month') { const c = new Date(now); c.setMonth(now.getMonth()-1); records = records.filter(r => new Date(r.dateObj) >= c); }
-      if (period === 'year')  { const c = new Date(now); c.setFullYear(now.getFullYear()-1); records = records.filter(r => new Date(r.dateObj) >= c); }
-      if (records.length === 0) { content.innerHTML = '<p class="empty-msg">해당 기간에 기록이 없어요</p>'; return; }
-      content.innerHTML = `
+      const q=query(collection(db,'workout_records'),where('member','==',member),where('tutor','==',loggedInTutor));
+      const snap=await getDocs(q);
+      let records=snap.docs.map(d=>d.data()).filter(r=>r.exerciseName===exercise);
+      records.sort((a,b)=>new Date(a.dateObj)-new Date(b.dateObj));
+      const now=new Date();
+      if(period==='week'){const c=new Date(now);c.setDate(now.getDate()-7);records=records.filter(r=>new Date(r.dateObj)>=c);}
+      if(period==='month'){const c=new Date(now);c.setMonth(now.getMonth()-1);records=records.filter(r=>new Date(r.dateObj)>=c);}
+      if(period==='year'){const c=new Date(now);c.setFullYear(now.getFullYear()-1);records=records.filter(r=>new Date(r.dateObj)>=c);}
+      if(records.length===0){content.innerHTML='<p class="empty-msg">해당 기간에 기록이 없어요</p>';return;}
+      content.innerHTML=`
         <p style="font-size:13px;font-weight:bold;color:#2d6a4f;margin-bottom:6px;">📦 중량 변화</p>
         <div class="chart-wrap"><canvas id="chartWeight"></canvas></div>
         <p style="font-size:13px;font-weight:bold;color:#2d6a4f;margin-bottom:6px;margin-top:8px;">🔄 횟수/초 변화</p>
@@ -1056,54 +1173,54 @@
           <thead><tr><th>날짜</th><th>중량</th><th>세트</th><th>횟수/초</th><th>메모</th></tr></thead>
           <tbody>${records.map(r=>`<tr><td>${r.date}</td><td>${r.weight?r.weight+'kg':'-'}</td><td>${r.sets?r.sets+'세트':'-'}</td><td>${r.reps?r.reps+r.unit:'-'}</td><td style="font-size:12px;color:#666;text-align:left">${r.memo||'-'}</td></tr>`).join('')}</tbody>
         </table>`;
-      if (growthChartWeight) growthChartWeight.destroy();
-      if (growthChartReps)   growthChartReps.destroy();
-      const opts = (label, data, color) => ({ type:'line', data:{ labels: records.map(r=>r.date), datasets:[{ label, data, borderColor: color, backgroundColor: color+'22', tension: 0.3, fill: true, pointRadius: 4, pointHoverRadius: 6 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:false,grid:{color:'#f0f4f8'}}, x:{grid:{display:false},ticks:{maxTicksLimit:6,font:{size:11}}} } } });
-      growthChartWeight = new Chart(document.getElementById('chartWeight'), opts('중량(kg)', records.map(r=>r.weight||0), '#2d6a4f'));
-      growthChartReps   = new Chart(document.getElementById('chartReps'),   opts('횟수/초',  records.map(r=>r.reps||0),   '#4a90d9'));
-    } catch(e) { content.innerHTML = '<p class="empty-msg">데이터를 불러오는 중 오류가 발생했어요</p>'; console.error(e); }
+      if(growthChartWeight) growthChartWeight.destroy();
+      if(growthChartReps)   growthChartReps.destroy();
+      const opts=(label,data,color)=>({type:'line',data:{labels:records.map(r=>r.date),datasets:[{label,data,borderColor:color,backgroundColor:color+'22',tension:0.3,fill:true,pointRadius:4,pointHoverRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'#f0f4f8'}},x:{grid:{display:false},ticks:{maxTicksLimit:6,font:{size:11}}}}}});
+      growthChartWeight=new Chart(document.getElementById('chartWeight'),opts('중량(kg)',records.map(r=>r.weight||0),'#2d6a4f'));
+      growthChartReps  =new Chart(document.getElementById('chartReps'),  opts('횟수/초', records.map(r=>r.reps||0),  '#4a90d9'));
+    } catch(e){content.innerHTML='<p class="empty-msg">데이터를 불러오는 중 오류가 발생했어요</p>';console.error(e);}
   };
 
   // ── 리포트 ───────────────────────────────────
-  window.setPeriod = function(period, btn) {
-    currentReportPeriod = period;
-    document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
+  window.setPeriod = function(period,btn) {
+    currentReportPeriod=period;
+    document.querySelectorAll('.period-tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active'); loadReport();
   };
   async function loadReport() {
-    const content = document.getElementById('report-content');
-    content.innerHTML = '<p class="loading-msg">불러오는 중...</p>';
-    const now = new Date();
-    let startThis, endThis, startLast, endLast, periodLabel, lastPeriodLabel;
-    if (currentReportPeriod === 'month') {
-      startThis = new Date(now.getFullYear(),now.getMonth(),1); endThis = new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
-      startLast = new Date(now.getFullYear(),now.getMonth()-1,1); endLast = new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
-      periodLabel = now.getFullYear()+'년 '+(now.getMonth()+1)+'월';
-      lastPeriodLabel = (now.getMonth()===0?now.getFullYear()-1:now.getFullYear())+'년 '+(now.getMonth()===0?12:now.getMonth())+'월';
-    } else if (currentReportPeriod === 'lastmonth') {
-      startThis = new Date(now.getFullYear(),now.getMonth()-1,1); endThis = new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
-      startLast = new Date(now.getFullYear(),now.getMonth()-2,1); endLast = new Date(now.getFullYear(),now.getMonth()-1,0,23,59,59);
-      periodLabel = (now.getMonth()===0?now.getFullYear()-1:now.getFullYear())+'년 '+(now.getMonth()===0?12:now.getMonth())+'월';
-      lastPeriodLabel = '그 전달';
-    } else {
-      startThis = new Date(now.getFullYear(),0,1); endThis = new Date(now.getFullYear(),11,31,23,59,59);
-      startLast = new Date(now.getFullYear()-1,0,1); endLast = new Date(now.getFullYear()-1,11,31,23,59,59);
-      periodLabel = now.getFullYear()+'년'; lastPeriodLabel = (now.getFullYear()-1)+'년';
+    const content=document.getElementById('report-content');
+    content.innerHTML='<p class="loading-msg">불러오는 중...</p>';
+    const now=new Date();
+    let startThis,endThis,startLast,endLast,periodLabel,lastPeriodLabel;
+    if(currentReportPeriod==='month'){
+      startThis=new Date(now.getFullYear(),now.getMonth(),1);endThis=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
+      startLast=new Date(now.getFullYear(),now.getMonth()-1,1);endLast=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      periodLabel=now.getFullYear()+'년 '+(now.getMonth()+1)+'월';
+      lastPeriodLabel=(now.getMonth()===0?now.getFullYear()-1:now.getFullYear())+'년 '+(now.getMonth()===0?12:now.getMonth())+'월';
+    }else if(currentReportPeriod==='lastmonth'){
+      startThis=new Date(now.getFullYear(),now.getMonth()-1,1);endThis=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      startLast=new Date(now.getFullYear(),now.getMonth()-2,1);endLast=new Date(now.getFullYear(),now.getMonth()-1,0,23,59,59);
+      periodLabel=(now.getMonth()===0?now.getFullYear()-1:now.getFullYear())+'년 '+(now.getMonth()===0?12:now.getMonth())+'월';
+      lastPeriodLabel='그 전달';
+    }else{
+      startThis=new Date(now.getFullYear(),0,1);endThis=new Date(now.getFullYear(),11,31,23,59,59);
+      startLast=new Date(now.getFullYear()-1,0,1);endLast=new Date(now.getFullYear()-1,11,31,23,59,59);
+      periodLabel=now.getFullYear()+'년';lastPeriodLabel=(now.getFullYear()-1)+'년';
     }
-    try {
-      const qThis = query(collection(db,'lesson_records'), where('dateObj','>=',startThis.toISOString()), where('dateObj','<=',endThis.toISOString()));
-      const snapThis = await getDocs(qThis); const lessonsThis = snapThis.docs.map(d => d.data()); const totalThis = lessonsThis.length;
-      const qLast = query(collection(db,'lesson_records'), where('dateObj','>=',startLast.toISOString()), where('dateObj','<=',endLast.toISOString()));
-      const totalLast = (await getDocs(qLast)).docs.length;
-      const diff = totalThis - totalLast; const diffClass = diff>0?'up':diff<0?'down':'same';
-      const diffPct = totalLast > 0 ? Math.round(Math.abs(diff)/totalLast*100) : 0;
-      const tutorCounts = {}; TUTORS.forEach(t => { tutorCounts[t] = 0; });
-      lessonsThis.forEach(l => { if (tutorCounts[l.tutor] !== undefined) tutorCounts[l.tutor]++; });
-      const memberCounts = {}; lessonsThis.forEach(l => { memberCounts[l.member] = (memberCounts[l.member]||0) + 1; });
-      const topMembers = Object.entries(memberCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
-      const monthlyData = Array(12).fill(0);
-      if (currentReportPeriod === 'year') lessonsThis.forEach(l => { monthlyData[new Date(l.dateObj).getMonth()]++; });
-      let html = `
+    try{
+      const qThis=query(collection(db,'lesson_records'),where('dateObj','>=',startThis.toISOString()),where('dateObj','<=',endThis.toISOString()));
+      const snapThis=await getDocs(qThis);const lessonsThis=snapThis.docs.map(d=>d.data());const totalThis=lessonsThis.length;
+      const qLast=query(collection(db,'lesson_records'),where('dateObj','>=',startLast.toISOString()),where('dateObj','<=',endLast.toISOString()));
+      const totalLast=(await getDocs(qLast)).docs.length;
+      const diff=totalThis-totalLast;const diffClass=diff>0?'up':diff<0?'down':'same';
+      const diffPct=totalLast>0?Math.round(Math.abs(diff)/totalLast*100):0;
+      const tutorCounts={};TUTORS.forEach(t=>{tutorCounts[t]=0;});
+      lessonsThis.forEach(l=>{if(tutorCounts[l.tutor]!==undefined)tutorCounts[l.tutor]++;});
+      const memberCounts={};lessonsThis.forEach(l=>{memberCounts[l.member]=(memberCounts[l.member]||0)+1;});
+      const topMembers=Object.entries(memberCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+      const monthlyData=Array(12).fill(0);
+      if(currentReportPeriod==='year')lessonsThis.forEach(l=>{monthlyData[new Date(l.dateObj).getMonth()]++;});
+      let html=`
         <div class="report-summary-grid">
           <div class="report-summary-item"><div class="report-summary-num">${totalThis}</div><div class="report-summary-label">${periodLabel} 수업</div></div>
           <div class="report-summary-item"><div class="report-summary-num">${totalLast}</div><div class="report-summary-label">${lastPeriodLabel} 수업</div></div>
@@ -1113,52 +1230,52 @@
             ${totalLast>0?`<div class="report-change-badge ${diffClass}">${diffPct}%</div>`:''}
           </div>
         </div>`;
-      if (currentReportPeriod === 'year') html += `<p class="report-section-title">📅 월별 수업 수</p><div class="lesson-chart-wrap"><canvas id="lessonChart"></canvas></div>`;
-      html += `<p class="report-section-title">👨‍🏫 튜터별 수업 수</p>
+      if(currentReportPeriod==='year')html+=`<p class="report-section-title">📅 월별 수업 수</p><div class="lesson-chart-wrap"><canvas id="lessonChart"></canvas></div>`;
+      html+=`<p class="report-section-title">👨‍🏫 튜터별 수업 수</p>
         <table class="growth-table" style="margin-bottom:16px"><thead><tr><th>튜터</th><th>수업 수</th><th>비율</th></tr></thead><tbody>`;
-      TUTORS.forEach(tutor => {
-        const cnt = tutorCounts[tutor]||0; const pct = totalThis > 0 ? Math.round(cnt/totalThis*100) : 0;
-        html += `<tr><td>${tutor}</td><td style="font-weight:bold;color:#2d6a4f">${cnt}회</td><td>${pct}%</td></tr>`;
+      TUTORS.forEach(tutor=>{
+        const cnt=tutorCounts[tutor]||0;const pct=totalThis>0?Math.round(cnt/totalThis*100):0;
+        html+=`<tr><td>${tutor}</td><td style="font-weight:bold;color:#2d6a4f">${cnt}회</td><td>${pct}%</td></tr>`;
       });
-      html += `</tbody></table>`;
-      if (topMembers.length > 0) {
-        html += `<p class="report-section-title">🏆 수업 수 Top 5 회원</p>
+      html+=`</tbody></table>`;
+      if(topMembers.length>0){
+        html+=`<p class="report-section-title">🏆 수업 수 Top 5 회원</p>
           <table class="growth-table"><thead><tr><th>순위</th><th>회원</th><th>수업 수</th></tr></thead><tbody>`;
-        topMembers.forEach(([name,cnt],i) => {
-          html += `<tr><td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위'}</td><td>${name}</td><td style="font-weight:bold;color:#2d6a4f">${cnt}회</td></tr>`;
+        topMembers.forEach(([name,cnt],i)=>{
+          html+=`<tr><td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위'}</td><td>${name}</td><td style="font-weight:bold;color:#2d6a4f">${cnt}회</td></tr>`;
         });
-        html += `</tbody></table>`;
+        html+=`</tbody></table>`;
       }
-      content.innerHTML = html;
-      if (currentReportPeriod === 'year') {
-        if (lessonChart) lessonChart.destroy();
-        lessonChart = new Chart(document.getElementById('lessonChart'), {
-          type: 'bar',
-          data: { labels: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'], datasets: [{ label: '수업 수', data: monthlyData, backgroundColor: '#2d6a4f88', borderColor: '#2d6a4f', borderWidth: 1, borderRadius: 6 }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f0f4f8' } }, x: { grid: { display: false } } } }
+      content.innerHTML=html;
+      if(currentReportPeriod==='year'){
+        if(lessonChart)lessonChart.destroy();
+        lessonChart=new Chart(document.getElementById('lessonChart'),{
+          type:'bar',
+          data:{labels:['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],datasets:[{label:'수업 수',data:monthlyData,backgroundColor:'#2d6a4f88',borderColor:'#2d6a4f',borderWidth:1,borderRadius:6}]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#f0f4f8'}},x:{grid:{display:false}}}}
         });
       }
-    } catch(e) { content.innerHTML = '<p class="empty-msg">데이터를 불러오는 중 오류가 발생했어요</p>'; console.error(e); }
+    }catch(e){content.innerHTML='<p class="empty-msg">데이터를 불러오는 중 오류가 발생했어요</p>';console.error(e);}
   }
 
   // ── 대시보드 ──────────────────────────────────
   async function loadDashboard() {
-    const content = document.getElementById('dashboard-content');
-    content.innerHTML = '<p class="loading-msg">불러오는 중...</p>';
-    const now = new Date();
-    const lastD = new Date(now.getFullYear(), now.getMonth()-1, 1);
-    const lastYM = lastD.getFullYear() + '-' + String(lastD.getMonth()+1).padStart(2,'0');
-    let html = '';
-    for (const tutor of TUTORS) {
-      let thisCount = 0;
-      try { const q = query(collection(db,'members'), where('tutor','==',tutor)); const snap = await getDocs(q); thisCount = snap.size; } catch(e) {}
-      let lastCount = null;
-      try { const s = await getDoc(doc(db,'member_snapshots',tutor+'_'+lastYM)); if (s.exists()) lastCount = s.data().count; } catch(e) {}
-      const diff = lastCount !== null ? thisCount - lastCount : null;
-      const diffNum = diff !== null ? (diff>0?'+'+diff:diff===0?'±0':String(diff)) : '-';
-      const diffClass = diff === null ? 'same' : diff>0?'up':diff<0?'down':'same';
-      const changeText = diff === null ? '정보 없음' : diff>0?'▲ '+diff+'명 증가':diff<0?'▼ '+Math.abs(diff)+'명 감소':'→ 전달과 동일';
-      html += `
+    const content=document.getElementById('dashboard-content');
+    content.innerHTML='<p class="loading-msg">불러오는 중...</p>';
+    const now=new Date();
+    const lastD=new Date(now.getFullYear(),now.getMonth()-1,1);
+    const lastYM=lastD.getFullYear()+'-'+String(lastD.getMonth()+1).padStart(2,'0');
+    let html='';
+    for(const tutor of TUTORS){
+      let thisCount=0;
+      try{const q=query(collection(db,'members'),where('tutor','==',tutor));const snap=await getDocs(q);thisCount=snap.size;}catch(e){}
+      let lastCount=null;
+      try{const s=await getDoc(doc(db,'member_snapshots',tutor+'_'+lastYM));if(s.exists())lastCount=s.data().count;}catch(e){}
+      const diff=lastCount!==null?thisCount-lastCount:null;
+      const diffNum=diff!==null?(diff>0?'+'+diff:diff===0?'±0':String(diff)):'-';
+      const diffClass=diff===null?'same':diff>0?'up':diff<0?'down':'same';
+      const changeText=diff===null?'정보 없음':diff>0?'▲ '+diff+'명 증가':diff<0?'▼ '+Math.abs(diff)+'명 감소':'→ 전달과 동일';
+      html+=`
         <div class="dash-tutor-card">
           <div class="dash-tutor-header"><span class="dash-tutor-name">${tutor} 튜터</span><span class="dash-change ${diffClass}">${changeText}</span></div>
           <div class="dash-count-wrap">
@@ -1168,7 +1285,7 @@
           </div>
         </div>`;
     }
-    content.innerHTML = html;
+    content.innerHTML=html;
   }
 </script>
 </body>
