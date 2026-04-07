@@ -64,16 +64,19 @@
     .unit-toggle:hover { background: #d1e7dd; }
     .delete-btn { background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 4px; }
     .delete-btn:hover { color: #e74c3c; }
-    .exercise-memo-wrap { grid-column: 1 / -1; margin-bottom: 10px; }
-    .exercise-memo { width: 100%; padding: 8px 10px; border: 1px solid #e9ecef; border-radius: 8px; font-size: 13px; font-family: inherit; resize: none; height: 52px; color: #555; background: #fafafa; }
-    .exercise-memo:focus { outline: none; border-color: #2d6a4f; background: white; }
-    .exercise-memo::placeholder { color: #bbb; }
     .exercise-hint { grid-column: 1 / -1; background: #fffbea; border: 1px solid #ffe066; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #555; line-height: 1.6; display: none; margin-bottom: 4px; }
     .exercise-hint.show { display: block; }
     .hint-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .hint-title { font-size: 12px; font-weight: bold; color: #856404; }
     .hint-use-btn { padding: 4px 10px; background: #2d6a4f; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
     .hint-text { white-space: pre-wrap; }
+    /* 운동별 메모 */
+    .memo-row { grid-column: 1 / -1; display: flex; gap: 6px; align-items: flex-start; margin-bottom: 12px; }
+    .exercise-memo { flex: 1; padding: 8px 10px; border: 1px solid #e9ecef; border-radius: 8px; font-size: 13px; font-family: inherit; resize: none; height: 52px; color: #555; background: #fafafa; }
+    .exercise-memo:focus { outline: none; border-color: #2d6a4f; background: white; }
+    .exercise-memo::placeholder { color: #bbb; }
+    .memo-mic-btn { padding: 0 10px; height: 52px; background: #f0f9f4; color: #2d6a4f; border: 1px solid #b7e4c7; border-radius: 8px; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+    .memo-mic-btn.listening { background: #fde8ea; color: #e63946; border-color: #f5a3aa; animation: pulse 1s infinite; }
     .add-exercise-btn { display: block; width: 100%; padding: 12px; background: #f0f4f8; color: #2d6a4f; border: 1px dashed #2d6a4f; border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 4px; }
     .feedback-wrap { margin-top: 16px; }
     .feedback-label { font-size: 13px; color: #555; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
@@ -342,54 +345,44 @@
 
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
-
   const TUTORS = ['이순재','박재우','이승일','이종민'];
 
-  // ── 운동 DB는 LocalStorage 유지 ──────────────
   function loadExerciseDB(){const s=localStorage.getItem('pt-exercise-db');if(s){try{return JSON.parse(s);}catch(e){}}return[];}
   function saveExerciseDB_store(){localStorage.setItem('pt-exercise-db',JSON.stringify(exerciseDB));}
-  let exerciseDB=loadExerciseDB();
-  let editingIdx=-1;
+  let exerciseDB=loadExerciseDB(), editingIdx=-1;
 
-  // ── 상태 변수 ────────────────────────────────
-  let members={}; // Firebase에서 로드
+  let members={};
   let currentTutor='', currentMember='', currentDateStr='', lastResult='';
   let recognition=null, isListening=false, currentTab='warmup';
   let feedbackRecognition=null, isFeedbackListening=false;
+  // 메모 음성
+  let memoRecognition=null, isMemoListening=false, activeMemoBtn=null;
   let selectedDate=new Date(), calViewYear=new Date().getFullYear(), calViewMonth=new Date().getMonth();
   let growthChartWeight=null, growthChartReps=null, lessonChart=null;
   let currentReportPeriod='month';
 
-  // ── Firebase 회원 데이터 ──────────────────────
-  // 회원 목록 로드 (튜터별)
+  // ── Firebase 회원 ────────────────────────────
   async function loadMembersFromFirebase(){
-    TUTORS.forEach(t=>{if(!members[t])members[t]=[];});
+    TUTORS.forEach(t=>{members[t]=[];});
     try{
       const snap=await getDocs(collection(db,'members'));
-      TUTORS.forEach(t=>{members[t]=[];});
       snap.docs.forEach(d=>{
         const data=d.data();
-        if(members[data.tutor]!==undefined){
+        if(members[data.tutor]!==undefined)
           members[data.tutor].push({id:d.id,name:data.name,order:data.order||0});
-        }
       });
-      // 이름순 정렬
       TUTORS.forEach(t=>{members[t].sort((a,b)=>a.order-b.order);});
-    }catch(e){console.error('회원 로드 오류:',e);}
+    }catch(e){console.error(e);}
   }
+  function getMemberNames(tutor){return(members[tutor]||[]).map(m=>m.name);}
 
-  // 회원 이름 배열 반환 (기존 코드 호환)
-  function getMemberNames(tutor){return(members[tutor]||[]).map(m=>typeof m==='string'?m:m.name);}
-
-  // ── 회원 수 스냅샷 ───────────────────────────
   async function saveMemberSnapshot(){
     const now=new Date();
     const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
     for(const tutor of TUTORS){
-      const count=getMemberNames(tutor).length;
       try{
         await setDoc(doc(db,'member_snapshots',tutor+'_'+ym),{
-          tutor,yearMonth:ym,count,updatedAt:new Date().toISOString()
+          tutor,yearMonth:ym,count:getMemberNames(tutor).length,updatedAt:new Date().toISOString()
         });
       }catch(e){console.error(e);}
     }
@@ -404,7 +397,6 @@
     if(page==='growth')    {loadMemberOptionsForGrowth();showScreen('growth');}
     if(page==='dashboard') {showScreen('dashboard');loadReport();loadDashboard();}
   };
-
   window.showScreen=function(name){
     ['tutor-screen','member-screen','exercise-screen','result-screen','db-screen','growth-screen','dashboard-screen']
       .forEach(id=>{document.getElementById(id).style.display='none';});
@@ -450,7 +442,6 @@
     await loadMembersFromFirebase();
     renderMembers();
   };
-
   function renderMembers(){
     const list=document.getElementById('member-list');list.innerHTML='';
     const myMembers=getMemberNames(currentTutor);
@@ -466,42 +457,33 @@
       const memberObj=members[currentTutor][idx];
       const row=document.createElement('div');row.className='member-row';
       const nb=document.createElement('button');nb.className='name-btn';nb.textContent=name;nb.onclick=()=>selectMember(name);
-      const db2=document.createElement('button');db2.className='del-member-btn';db2.textContent='✕';db2.onclick=()=>deleteMember(memberObj.id||null,idx);
+      const db2=document.createElement('button');db2.className='del-member-btn';db2.textContent='✕';db2.onclick=()=>deleteMember(memberObj.id,idx);
       row.appendChild(nb);row.appendChild(db2);list.appendChild(row);
     });
   }
-
   window.addMember=async function(){
     const name=prompt('새 회원 이름을 입력하세요:');
     if(name&&name.trim()){
       try{
-        // Firebase에 저장
         const docRef=await addDoc(collection(db,'members'),{
-          tutor:currentTutor,
-          name:name.trim(),
-          order:Date.now(),
-          createdAt:new Date().toISOString()
+          tutor:currentTutor,name:name.trim(),order:Date.now(),createdAt:new Date().toISOString()
         });
-        if(!members[currentTutor])members[currentTutor]=[];
         members[currentTutor].push({id:docRef.id,name:name.trim(),order:Date.now()});
         await saveMemberSnapshot();
         renderMembers();
-      }catch(e){console.error('회원 추가 오류:',e);alert('저장 중 오류가 발생했어요.');}
+      }catch(e){console.error(e);alert('저장 중 오류가 발생했어요.');}
     }
   };
-
   async function deleteMember(docId,idx){
-    const name=getMemberNames(currentTutor)[idx];
-    if(confirm(name+' 회원을 삭제할까요?')){
+    if(confirm(getMemberNames(currentTutor)[idx]+' 회원을 삭제할까요?')){
       try{
         if(docId)await deleteDoc(doc(db,'members',docId));
         members[currentTutor].splice(idx,1);
         await saveMemberSnapshot();
         renderMembers();
-      }catch(e){console.error('회원 삭제 오류:',e);}
+      }catch(e){console.error(e);}
     }
   }
-
   function selectMember(name){
     currentMember=name;
     document.getElementById('member-name-display').textContent=name+' 회원님';
@@ -521,7 +503,7 @@
     });
   };
 
-  // ── 운동 행 ──────────────────────────────────
+  // ── 운동 행 (메모 + 메모 음성 포함) ─────────
   window.addRow=function(section,name='',weight='',sets='',reps='',unit='회',memo=''){
     const row=document.createElement('div');row.className='exercise-row';
     row.innerHTML=`
@@ -534,11 +516,15 @@
       </div>
       <button class="delete-btn" onclick="this.parentElement.remove()">✕</button>
       <div class="exercise-hint">
-        <div class="hint-header"><span class="hint-title">📌 저장된 운동 방법</span><button class="hint-use-btn" onclick="useHint(this)">이 피드백 사용하기</button></div>
+        <div class="hint-header">
+          <span class="hint-title">📌 저장된 운동 방법</span>
+          <button class="hint-use-btn" onclick="useHint(this)">이 피드백 사용하기</button>
+        </div>
         <div class="hint-text"></div>
       </div>
-      <div class="exercise-memo-wrap">
-        <textarea class="exercise-memo" placeholder="이 운동 메모 (예: 무릎 각도 잘됨)">${memo}</textarea>
+      <div class="memo-row">
+        <textarea class="exercise-memo" placeholder="이 운동 메모를 입력하거나 🎤 버튼으로 음성 입력 (예: 무릎 각도 잘됨)">${memo}</textarea>
+        <button class="memo-mic-btn" onclick="toggleMemoVoice(this)" title="음성으로 메모 입력">🎤</button>
       </div>`;
     document.getElementById('list-'+section).appendChild(row);
     if(name)checkExerciseHintByName(row.querySelector('input[type=text]'),name);
@@ -557,6 +543,53 @@
     document.getElementById('feedback-msg').value=cur?cur+'\n'+method:method;
     btn.closest('.exercise-hint').classList.remove('show');
   };
+
+  // ── 운동별 메모 음성 입력 ─────────────────────
+  window.toggleMemoVoice=function(btn){
+    if(isMemoListening){
+      stopMemoVoice();
+    }else{
+      // 다른 메모 음성이 켜져 있으면 먼저 끄기
+      if(activeMemoBtn&&activeMemoBtn!==btn)stopMemoVoice();
+      startMemoVoice(btn);
+    }
+  };
+  function startMemoVoice(btn){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){alert('Chrome 브라우저를 사용해 주세요!');return;}
+    const textarea=btn.parentElement.querySelector('.exercise-memo');
+    memoRecognition=new SR();
+    memoRecognition.lang='ko-KR';
+    memoRecognition.continuous=true;
+    memoRecognition.interimResults=true;
+    let finalText=textarea.value;
+    activeMemoBtn=btn;
+    memoRecognition.onstart=()=>{
+      isMemoListening=true;
+      btn.textContent='⏹';
+      btn.classList.add('listening');
+    };
+    memoRecognition.onresult=(e)=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal)finalText+=e.results[i][0].transcript;
+        else interim=e.results[i][0].transcript;
+      }
+      textarea.value=finalText+interim;
+    };
+    memoRecognition.onerror=()=>stopMemoVoice();
+    memoRecognition.onend=()=>{if(isMemoListening)memoRecognition.start();};
+    memoRecognition.start();
+  }
+  function stopMemoVoice(){
+    isMemoListening=false;
+    if(memoRecognition)memoRecognition.stop();
+    if(activeMemoBtn){
+      activeMemoBtn.textContent='🎤';
+      activeMemoBtn.classList.remove('listening');
+      activeMemoBtn=null;
+    }
+  }
 
   // ── 운동 DB ──────────────────────────────────
   function renderDB(){
@@ -587,7 +620,7 @@
     if(confirm(exerciseDB[idx].name+'을 삭제할까요?')){exerciseDB.splice(idx,1);saveExerciseDB_store();renderDB();}
   };
 
-  // ── 음성 인식 ────────────────────────────────
+  // ── 운동 음성 인식 ────────────────────────────
   window.toggleVoice=function(){isListening?stopVoice():startVoice();};
   function startVoice(){
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -603,6 +636,8 @@
     document.getElementById('mic-btn').classList.remove('listening');document.getElementById('mic-btn').textContent='🎤';
     document.getElementById('voice-status').classList.remove('active');
   }
+
+  // ── 마무리 멘트 음성 ──────────────────────────
   window.toggleFeedbackVoice=function(){isFeedbackListening?stopFeedbackVoice():startFeedbackVoice();};
   function startFeedbackVoice(){
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -623,6 +658,7 @@
     isFeedbackListening=false;if(feedbackRecognition)feedbackRecognition.stop();
     const btn=document.getElementById('feedback-mic-btn');btn.textContent='🎤 음성 입력';btn.classList.remove('listening');
   }
+
   function parseVoiceInput(text){
     const numMap={'영':0,'일':1,'이':2,'삼':3,'사':4,'오':5,'육':6,'칠':7,'팔':8,'구':9,'십':10,'십일':11,'십이':12,'십삼':13,'십사':14,'십오':15,'십육':16,'십칠':17,'십팔':18,'십구':19,'이십':20,'삼십':30,'사십':40,'오십':50,'육십':60,'칠십':70,'팔십':80,'구십':90,'백':100,'백오십':150,'이백':200};
     const isSec=/초/.test(text);let t=text;
@@ -663,18 +699,16 @@
       if(ex.weight&&Number(ex.weight)!==0)line+='  '+ex.weight+'kg';
       if(ex.sets&&Number(ex.sets)!==0)    line+=' / '+ex.sets+'세트';
       if(ex.reps&&Number(ex.reps)!==0)    line+=' / '+ex.reps+ex.unit;
-      if(ex.memo) line+='\n   💬 '+ex.memo;
+      if(ex.memo)                          line+='\n   💬 '+ex.memo;
       return line;
     }).join('\n');
   }
-
   window.saveRecord=async function(){
     const warmup=getExercises('warmup'),main=getExercises('main'),cooldown=getExercises('cooldown');
     if(warmup.length===0&&main.length===0){alert('운동을 최소 1개 이상 입력해주세요!');return;}
-    stopFeedbackVoice();
+    stopFeedbackVoice();stopMemoVoice();
     const now=new Date();
     const yearMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-    const yearStr=String(now.getFullYear());
     try{
       for(const ex of [...warmup,...main,...cooldown]){
         await addDoc(collection(db,'workout_records'),{
@@ -687,7 +721,7 @@
       const lessonId=currentTutor+'_'+currentMember+'_'+selectedDate.toISOString().slice(0,10);
       await setDoc(doc(db,'lesson_records',lessonId),{
         tutor:currentTutor,member:currentMember,date:currentDateStr,
-        dateObj:selectedDate.toISOString(),yearMonth,year:yearStr,
+        dateObj:selectedDate.toISOString(),yearMonth,year:String(now.getFullYear()),
         createdAt:new Date().toISOString()
       });
     }catch(e){console.error(e);}
@@ -707,7 +741,6 @@
     document.getElementById('copy-btn').classList.remove('copied');
     showScreen('result');
   };
-
   window.copyResult=function(){
     navigator.clipboard.writeText(lastResult).then(()=>{
       const btn=document.getElementById('copy-btn');btn.textContent='✅ 복사 완료! 이제 밴드/카톡에 붙여넣으세요';btn.classList.add('copied');
@@ -756,8 +789,6 @@
       else if(period==='year'){const c=new Date(now);c.setFullYear(now.getFullYear()-1);records=records.filter(r=>new Date(r.dateObj)>=c);}
       if(records.length===0){content.innerHTML='<p class="empty-msg">해당 기간에 기록이 없어요</p>';return;}
       const labels=records.map(r=>r.date);
-      const weightData=records.map(r=>r.weight||0);
-      const repsData=records.map(r=>r.reps||0);
       content.innerHTML=`
         <p style="font-size:13px;font-weight:bold;color:#2d6a4f;margin-bottom:6px;">📦 중량 변화</p>
         <div class="chart-wrap"><canvas id="chartWeight"></canvas></div>
@@ -771,8 +802,8 @@
       if(growthChartWeight)growthChartWeight.destroy();
       if(growthChartReps)  growthChartReps.destroy();
       const opts=(label,data,color)=>({type:'line',data:{labels,datasets:[{label,data,borderColor:color,backgroundColor:color+'22',tension:0.3,fill:true,pointRadius:4,pointHoverRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'#f0f4f8'}},x:{grid:{display:false},ticks:{maxTicksLimit:6,font:{size:11}}}}}});
-      growthChartWeight=new Chart(document.getElementById('chartWeight'),opts('중량(kg)',weightData,'#2d6a4f'));
-      growthChartReps  =new Chart(document.getElementById('chartReps'),  opts('횟수/초',repsData,'#4a90d9'));
+      growthChartWeight=new Chart(document.getElementById('chartWeight'),opts('중량(kg)',records.map(r=>r.weight||0),'#2d6a4f'));
+      growthChartReps  =new Chart(document.getElementById('chartReps'),  opts('횟수/초', records.map(r=>r.reps||0), '#4a90d9'));
     }catch(e){content.innerHTML='<p class="empty-msg">데이터를 불러오는 중 오류가 발생했어요</p>';console.error(e);}
   };
 
@@ -780,81 +811,57 @@
   window.setPeriod=function(period,btn){
     currentReportPeriod=period;
     document.querySelectorAll('.period-tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    loadReport();
+    btn.classList.add('active');loadReport();
   };
-
   async function loadReport(){
     const content=document.getElementById('report-content');
     content.innerHTML='<p class="loading-msg">불러오는 중...</p>';
     const now=new Date();
     let startThis,endThis,startLast,endLast,periodLabel,lastPeriodLabel;
     if(currentReportPeriod==='month'){
-      startThis=new Date(now.getFullYear(),now.getMonth(),1);
-      endThis=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
-      startLast=new Date(now.getFullYear(),now.getMonth()-1,1);
-      endLast=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      startThis=new Date(now.getFullYear(),now.getMonth(),1);endThis=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
+      startLast=new Date(now.getFullYear(),now.getMonth()-1,1);endLast=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
       periodLabel=now.getFullYear()+'년 '+(now.getMonth()+1)+'월';
       lastPeriodLabel=(now.getMonth()===0?now.getFullYear()-1:now.getFullYear())+'년 '+(now.getMonth()===0?12:now.getMonth())+'월';
     }else if(currentReportPeriod==='lastmonth'){
-      startThis=new Date(now.getFullYear(),now.getMonth()-1,1);
-      endThis=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
-      startLast=new Date(now.getFullYear(),now.getMonth()-2,1);
-      endLast=new Date(now.getFullYear(),now.getMonth()-1,0,23,59,59);
+      startThis=new Date(now.getFullYear(),now.getMonth()-1,1);endThis=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      startLast=new Date(now.getFullYear(),now.getMonth()-2,1);endLast=new Date(now.getFullYear(),now.getMonth()-1,0,23,59,59);
       periodLabel=(now.getMonth()===0?now.getFullYear()-1:now.getFullYear())+'년 '+(now.getMonth()===0?12:now.getMonth())+'월';
       lastPeriodLabel='그 전달';
     }else{
-      startThis=new Date(now.getFullYear(),0,1);
-      endThis=new Date(now.getFullYear(),11,31,23,59,59);
-      startLast=new Date(now.getFullYear()-1,0,1);
-      endLast=new Date(now.getFullYear()-1,11,31,23,59,59);
-      periodLabel=now.getFullYear()+'년';
-      lastPeriodLabel=(now.getFullYear()-1)+'년';
+      startThis=new Date(now.getFullYear(),0,1);endThis=new Date(now.getFullYear(),11,31,23,59,59);
+      startLast=new Date(now.getFullYear()-1,0,1);endLast=new Date(now.getFullYear()-1,11,31,23,59,59);
+      periodLabel=now.getFullYear()+'년';lastPeriodLabel=(now.getFullYear()-1)+'년';
     }
     try{
       const qThis=query(collection(db,'lesson_records'),where('dateObj','>=',startThis.toISOString()),where('dateObj','<=',endThis.toISOString()));
-      const snapThis=await getDocs(qThis);
-      const lessonsThis=snapThis.docs.map(d=>d.data());
-      const totalThis=lessonsThis.length;
+      const snapThis=await getDocs(qThis);const lessonsThis=snapThis.docs.map(d=>d.data());const totalThis=lessonsThis.length;
       const qLast=query(collection(db,'lesson_records'),where('dateObj','>=',startLast.toISOString()),where('dateObj','<=',endLast.toISOString()));
-      const snapLast=await getDocs(qLast);
-      const totalLast=snapLast.docs.length;
+      const totalLast=(await getDocs(qLast)).docs.length;
       const diff=totalThis-totalLast;
       const diffClass=diff>0?'up':diff<0?'down':'same';
       const diffPct=totalLast>0?Math.round(Math.abs(diff)/totalLast*100):0;
       const tutorCounts={};TUTORS.forEach(t=>{tutorCounts[t]=0;});
       lessonsThis.forEach(l=>{if(tutorCounts[l.tutor]!==undefined)tutorCounts[l.tutor]++;});
-      const memberCounts={};
-      lessonsThis.forEach(l=>{memberCounts[l.member]=(memberCounts[l.member]||0)+1;});
+      const memberCounts={};lessonsThis.forEach(l=>{memberCounts[l.member]=(memberCounts[l.member]||0)+1;});
       const topMembers=Object.entries(memberCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
       const monthlyData=Array(12).fill(0);
       if(currentReportPeriod==='year')lessonsThis.forEach(l=>{monthlyData[new Date(l.dateObj).getMonth()]++;});
-
       let html=`
         <div class="report-summary-grid">
-          <div class="report-summary-item">
-            <div class="report-summary-num">${totalThis}</div>
-            <div class="report-summary-label">${periodLabel} 수업</div>
-          </div>
-          <div class="report-summary-item">
-            <div class="report-summary-num">${totalLast}</div>
-            <div class="report-summary-label">${lastPeriodLabel} 수업</div>
-          </div>
+          <div class="report-summary-item"><div class="report-summary-num">${totalThis}</div><div class="report-summary-label">${periodLabel} 수업</div></div>
+          <div class="report-summary-item"><div class="report-summary-num">${totalLast}</div><div class="report-summary-label">${lastPeriodLabel} 수업</div></div>
           <div class="report-summary-item">
             <div class="report-summary-num report-change-badge ${diffClass}">${diff>0?'+'+diff:diff===0?'±0':diff}</div>
             <div class="report-summary-label">전기간 대비</div>
             ${totalLast>0?`<div class="report-change-badge ${diffClass}">${diffPct}%</div>`:''}
           </div>
         </div>`;
-      if(currentReportPeriod==='year'){
-        html+=`<p class="report-section-title">📅 월별 수업 수</p><div class="lesson-chart-wrap"><canvas id="lessonChart"></canvas></div>`;
-      }
+      if(currentReportPeriod==='year')html+=`<p class="report-section-title">📅 월별 수업 수</p><div class="lesson-chart-wrap"><canvas id="lessonChart"></canvas></div>`;
       html+=`<p class="report-section-title">👨‍🏫 튜터별 수업 수</p>
-        <table class="growth-table" style="margin-bottom:16px">
-          <thead><tr><th>튜터</th><th>수업 수</th><th>비율</th></tr></thead><tbody>`;
+        <table class="growth-table" style="margin-bottom:16px"><thead><tr><th>튜터</th><th>수업 수</th><th>비율</th></tr></thead><tbody>`;
       TUTORS.forEach(tutor=>{
-        const cnt=tutorCounts[tutor]||0;
-        const pct=totalThis>0?Math.round(cnt/totalThis*100):0;
+        const cnt=tutorCounts[tutor]||0;const pct=totalThis>0?Math.round(cnt/totalThis*100):0;
         html+=`<tr><td>${tutor}</td><td style="font-weight:bold;color:#2d6a4f">${cnt}회</td><td>${pct}%</td></tr>`;
       });
       html+=`</tbody></table>`;
@@ -882,31 +889,22 @@
   async function loadDashboard(){
     const content=document.getElementById('dashboard-content');
     content.innerHTML='<p class="loading-msg">불러오는 중...</p>';
-    await loadMembersFromFirebase();
-    await saveMemberSnapshot();
+    await loadMembersFromFirebase();await saveMemberSnapshot();
     const now=new Date();
     const thisYM=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
     const lastD=new Date(now.getFullYear(),now.getMonth()-1,1);
     const lastYM=lastD.getFullYear()+'-'+String(lastD.getMonth()+1).padStart(2,'0');
     let html='';
     for(const tutor of TUTORS){
-      const myMembers=getMemberNames(tutor);
-      const thisCount=myMembers.length;
-      let lastCount=null;
-      try{
-        const lastSnap=await getDoc(doc(db,'member_snapshots',tutor+'_'+lastYM));
-        if(lastSnap.exists())lastCount=lastSnap.data().count;
-      }catch(e){console.error(e);}
+      const myMembers=getMemberNames(tutor);const thisCount=myMembers.length;let lastCount=null;
+      try{const s=await getDoc(doc(db,'member_snapshots',tutor+'_'+lastYM));if(s.exists())lastCount=s.data().count;}catch(e){}
       const diff=lastCount!==null?thisCount-lastCount:null;
       const diffNum=diff!==null?(diff>0?'+'+diff:diff===0?'±0':String(diff)):'-';
       const diffClass=diff===null?'same':diff>0?'up':diff<0?'down':'same';
       const changeText=diff===null?'정보 없음':diff>0?'▲ '+diff+'명 증가':diff<0?'▼ '+Math.abs(diff)+'명 감소':'→ 전달과 동일';
       html+=`
         <div class="dash-tutor-card">
-          <div class="dash-tutor-header">
-            <span class="dash-tutor-name">${tutor} 튜터</span>
-            <span class="dash-change ${diffClass}">${changeText}</span>
-          </div>
+          <div class="dash-tutor-header"><span class="dash-tutor-name">${tutor} 튜터</span><span class="dash-change ${diffClass}">${changeText}</span></div>
           <div class="dash-count-wrap">
             <div class="dash-count-item"><div class="dash-count-num">${thisCount}</div><div class="dash-count-label">이번달 회원 수</div></div>
             <div class="dash-count-item"><div class="dash-count-num">${lastCount!==null?lastCount:'-'}</div><div class="dash-count-label">지난달 회원 수</div></div>
@@ -922,7 +920,6 @@
   (async()=>{
     await loadMembersFromFirebase();
     await saveMemberSnapshot();
-    console.log('✅ 앱 초기화 완료');
   })();
 </script>
 </body>
