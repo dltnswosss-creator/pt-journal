@@ -299,7 +299,7 @@
         display: grid;
         grid-template-columns: 2fr 1fr 1fr 1fr auto;
         gap: 6px;
-        margin-bottom: 6px;
+        margin-bottom: 2px;
         align-items: start;
       }
       .exercise-row input {
@@ -356,6 +356,33 @@
       .delete-btn:hover {
         color: #e74c3c;
       }
+
+      /* 운동별 메모 */
+      .exercise-memo-wrap {
+        grid-column: 1 / -1;
+        margin-bottom: 10px;
+      }
+      .exercise-memo {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: inherit;
+        resize: none;
+        height: 52px;
+        color: #555;
+        background: #fafafa;
+      }
+      .exercise-memo:focus {
+        outline: none;
+        border-color: #2d6a4f;
+        background: white;
+      }
+      .exercise-memo::placeholder {
+        color: #bbb;
+      }
+
       .exercise-hint {
         grid-column: 1 / -1;
         background: #fffbea;
@@ -366,6 +393,7 @@
         color: #555;
         line-height: 1.6;
         display: none;
+        margin-bottom: 4px;
       }
       .exercise-hint.show {
         display: block;
@@ -631,7 +659,7 @@
       }
       .chart-wrap {
         position: relative;
-        height: 220px;
+        height: 200px;
         margin-bottom: 16px;
       }
       .growth-table {
@@ -655,7 +683,74 @@
         background: #f8f9fa;
       }
 
-      /* 대시보드 */
+      /* 대시보드 & 리포트 */
+      .report-section-title {
+        font-size: 15px;
+        font-weight: bold;
+        color: #2d6a4f;
+        margin: 20px 0 10px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid #d1e7dd;
+      }
+      .report-period-tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+      .period-tab {
+        padding: 6px 14px;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        font-size: 13px;
+        cursor: pointer;
+        background: white;
+        color: #666;
+      }
+      .period-tab.active {
+        background: #2d6a4f;
+        color: white;
+        border-color: #2d6a4f;
+      }
+
+      /* 센터 전체 수업 수 */
+      .report-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .report-summary-item {
+        background: #f0f9f4;
+        border-radius: 12px;
+        padding: 14px 8px;
+        text-align: center;
+      }
+      .report-summary-num {
+        font-size: 26px;
+        font-weight: bold;
+        color: #2d6a4f;
+      }
+      .report-summary-label {
+        font-size: 11px;
+        color: #888;
+        margin-top: 2px;
+      }
+      .report-change-badge {
+        font-size: 12px;
+        font-weight: bold;
+        margin-top: 4px;
+      }
+      .report-change-badge.up {
+        color: #2d6a4f;
+      }
+      .report-change-badge.down {
+        color: #e74c3c;
+      }
+      .report-change-badge.same {
+        color: #888;
+      }
+
+      /* 튜터별 수업 수 */
       .dash-tutor-card {
         background: white;
         border-radius: 12px;
@@ -671,12 +766,12 @@
         margin-bottom: 14px;
       }
       .dash-tutor-name {
-        font-size: 17px;
+        font-size: 16px;
         font-weight: bold;
         color: #2d6a4f;
       }
       .dash-change {
-        font-size: 13px;
+        font-size: 12px;
         padding: 3px 10px;
         border-radius: 20px;
         font-weight: bold;
@@ -706,7 +801,7 @@
         padding: 10px 4px;
       }
       .dash-count-num {
-        font-size: 26px;
+        font-size: 22px;
         font-weight: bold;
         color: #2d6a4f;
       }
@@ -716,7 +811,7 @@
         margin-top: 2px;
       }
       .dash-diff-num {
-        font-size: 26px;
+        font-size: 22px;
         font-weight: bold;
       }
       .dash-diff-num.up {
@@ -731,9 +826,16 @@
       .dash-member-list {
         font-size: 13px;
         color: #666;
-        line-height: 1.8;
         border-top: 1px solid #f0f4f8;
         padding-top: 10px;
+        line-height: 1.8;
+      }
+
+      /* 수업 수 차트 */
+      .lesson-chart-wrap {
+        position: relative;
+        height: 180px;
+        margin-bottom: 8px;
       }
 
       .modal-overlay {
@@ -860,6 +962,11 @@
         color: #aaa;
         font-size: 14px;
         padding: 20px 0;
+      }
+      .divider {
+        border: none;
+        border-top: 1px solid #f0f4f8;
+        margin: 16px 0;
       }
     </style>
   </head>
@@ -1073,12 +1180,30 @@
       </div>
     </div>
 
-    <!-- 7. 대시보드 -->
+    <!-- 7. 대시보드 + 리포트 -->
     <div class="container" id="dashboard-screen">
+      <!-- 리포트 섹션 -->
       <div class="card">
-        <h2>📊 튜터별 대시보드</h2>
+        <h2>📊 센터 리포트</h2>
+        <div class="report-period-tabs">
+          <button class="period-tab active" onclick="setPeriod('month',this)">
+            이번달
+          </button>
+          <button class="period-tab" onclick="setPeriod('lastmonth',this)">
+            지난달
+          </button>
+          <button class="period-tab" onclick="setPeriod('year',this)">
+            올해
+          </button>
+        </div>
+        <div id="report-content"><p class="loading-msg">불러오는 중...</p></div>
+      </div>
+
+      <!-- 튜터별 회원 수 섹션 -->
+      <div class="card">
+        <h2>👥 튜터별 회원 현황</h2>
         <p style="font-size: 13px; color: #aaa; margin-bottom: 16px">
-          매월 1일 기준으로 회원 수가 자동 기록돼요
+          회원 추가/삭제 시 자동으로 기록돼요
         </p>
         <div id="dashboard-content">
           <p class="loading-msg">불러오는 중...</p>
@@ -1117,7 +1242,7 @@
         <span class="nav-icon">📈</span><span>성장</span>
       </button>
       <button class="nav-btn" id="nav-dashboard" onclick="navTo('dashboard')">
-        <span class="nav-icon">📊</span><span>대시보드</span>
+        <span class="nav-icon">📊</span><span>리포트</span>
       </button>
       <button class="nav-btn" id="nav-db" onclick="navTo('db')">
         <span class="nav-icon">📚</span><span>운동DB</span>
@@ -1184,9 +1309,9 @@
         localStorage.setItem('pt-exercise-db', JSON.stringify(exerciseDB));
       }
 
-      let members = loadMembers();
-      let exerciseDB = loadExerciseDB();
-      let editingIdx = -1;
+      let members = loadMembers(),
+        exerciseDB = loadExerciseDB(),
+        editingIdx = -1;
       let currentTutor = '',
         currentMember = '',
         currentDateStr = '',
@@ -1200,10 +1325,11 @@
         calViewYear = new Date().getFullYear(),
         calViewMonth = new Date().getMonth();
       let growthChartWeight = null,
-        growthChartReps = null;
+        growthChartReps = null,
+        lessonChart = null;
+      let currentReportPeriod = 'month';
 
-      // ── 회원 수 스냅샷 저장 ────────────────────────
-      // 회원이 추가/삭제될 때마다 이번달 스냅샷을 업데이트
+      // ── 회원 수 스냅샷 ───────────────────────────
       async function saveMemberSnapshot() {
         const now = new Date();
         const ym =
@@ -1211,7 +1337,6 @@
         for (const tutor of TUTORS) {
           const count = (members[tutor] || []).length;
           try {
-            // 문서 ID를 "튜터명_년월" 로 고정해서 덮어쓰기 (upsert)
             await setDoc(doc(db, 'member_snapshots', tutor + '_' + ym), {
               tutor,
               yearMonth: ym,
@@ -1401,7 +1526,7 @@
           if (!members[currentTutor]) members[currentTutor] = [];
           members[currentTutor].push(name.trim());
           saveMembers();
-          await saveMemberSnapshot(); // 회원 추가 시 스냅샷 업데이트
+          await saveMemberSnapshot();
           renderMembers();
         }
       };
@@ -1409,7 +1534,7 @@
         if (confirm(members[currentTutor][idx] + ' 회원을 삭제할까요?')) {
           members[currentTutor].splice(idx, 1);
           saveMembers();
-          await saveMemberSnapshot(); // 회원 삭제 시 스냅샷 업데이트
+          await saveMemberSnapshot();
           renderMembers();
         }
       }
@@ -1444,14 +1569,15 @@
         });
       };
 
-      // ── 운동 행 ──────────────────────────────────
+      // ── 운동 행 (메모 포함) ───────────────────────
       window.addRow = function (
         section,
         name = '',
         weight = '',
         sets = '',
         reps = '',
-        unit = '회'
+        unit = '회',
+        memo = ''
       ) {
         const row = document.createElement('div');
         row.className = 'exercise-row';
@@ -1463,14 +1589,20 @@
         <input type="number" placeholder="10" min="1" value="${reps}" />
         <button class="unit-toggle" onclick="toggleUnit(this)">${unit}</button>
       </div>
-      <button class="delete-btn" onclick="this.parentElement.remove()">✕</button>
+      <button class="delete-btn" onclick="removeExerciseRow(this)">✕</button>
       <div class="exercise-hint">
         <div class="hint-header"><span class="hint-title">📌 저장된 운동 방법</span><button class="hint-use-btn" onclick="useHint(this)">이 피드백 사용하기</button></div>
         <div class="hint-text"></div>
+      </div>
+      <div class="exercise-memo-wrap">
+        <textarea class="exercise-memo" placeholder="이 운동에 대한 메모 (예: 무릎 각도 90도 유지 잘됨)">${memo}</textarea>
       </div>`;
         document.getElementById('list-' + section).appendChild(row);
         if (name)
           checkExerciseHintByName(row.querySelector('input[type=text]'), name);
+      };
+      window.removeExerciseRow = function (btn) {
+        btn.parentElement.remove();
       };
       window.toggleUnit = function (btn) {
         btn.textContent = btn.textContent === '회' ? '초' : '회';
@@ -1735,7 +1867,8 @@
             sets = inputs[2].value.trim(),
             reps = inputs[3].value.trim();
           const unit = row.querySelector('.unit-toggle').textContent.trim();
-          if (name) list.push({ name, weight, sets, reps, unit });
+          const memo = row.querySelector('.exercise-memo')?.value.trim() || '';
+          if (name) list.push({ name, weight, sets, reps, unit, memo });
         });
         return list;
       }
@@ -1749,10 +1882,12 @@
               line += ' / ' + ex.sets + '세트';
             if (ex.reps && Number(ex.reps) !== 0)
               line += ' / ' + ex.reps + ex.unit;
+            if (ex.memo) line += '\n   💬 ' + ex.memo;
             return line;
           })
           .join('\n');
       }
+
       window.saveRecord = async function () {
         const warmup = getExercises('warmup'),
           main = getExercises('main'),
@@ -1762,7 +1897,14 @@
           return;
         }
         stopFeedbackVoice();
+
+        const now = new Date();
+        const yearMonth =
+          now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        const yearStr = String(now.getFullYear());
+
         try {
+          // 운동 기록 저장
           for (const ex of [...warmup, ...main, ...cooldown]) {
             await addDoc(collection(db, 'workout_records'), {
               member: currentMember,
@@ -1774,12 +1916,32 @@
               sets: Number(ex.sets) || 0,
               reps: Number(ex.reps) || 0,
               unit: ex.unit,
+              memo: ex.memo || '',
               createdAt: new Date(),
             });
           }
+
+          // 수업 기록 저장 (날짜+회원 기준으로 1회 카운트)
+          const lessonId =
+            currentTutor +
+            '_' +
+            currentMember +
+            '_' +
+            selectedDate.toISOString().slice(0, 10);
+          await setDoc(doc(db, 'lesson_records', lessonId), {
+            tutor: currentTutor,
+            member: currentMember,
+            date: currentDateStr,
+            dateObj: selectedDate.toISOString(),
+            yearMonth,
+            year: yearStr,
+            createdAt: new Date().toISOString(),
+          });
         } catch (e) {
           console.error(e);
         }
+
+        // 일지 텍스트 생성
         let result = '';
         result += '📋 ' + currentMember + ' 회원님 운동 일지\n';
         result += '📅 ' + currentDateStr + '\n';
@@ -1809,6 +1971,7 @@
         document.getElementById('copy-btn').classList.remove('copied');
         showScreen('result');
       };
+
       window.copyResult = function () {
         navigator.clipboard
           .writeText(lastResult)
@@ -1920,7 +2083,7 @@
         <div class="chart-wrap"><canvas id="chartReps"></canvas></div>
         <p style="font-size:13px;font-weight:bold;color:#333;margin-bottom:8px;margin-top:16px;">📋 상세 기록</p>
         <table class="growth-table">
-          <thead><tr><th>날짜</th><th>중량</th><th>세트</th><th>횟수/초</th></tr></thead>
+          <thead><tr><th>날짜</th><th>중량</th><th>세트</th><th>횟수/초</th><th>메모</th></tr></thead>
           <tbody>${records
             .map(
               (r) =>
@@ -1928,6 +2091,8 @@
                   r.weight ? r.weight + 'kg' : '-'
                 }</td><td>${r.sets ? r.sets + '세트' : '-'}</td><td>${
                   r.reps ? r.reps + r.unit : '-'
+                }</td><td style="font-size:12px;color:#666;text-align:left">${
+                  r.memo || '-'
                 }</td></tr>`
             )
             .join('')}</tbody>
@@ -1979,14 +2144,251 @@
         }
       };
 
-      // ── 대시보드 ──────────────────────────────────
+      // ── 리포트 기간 탭 ────────────────────────────
+      window.setPeriod = function (period, btn) {
+        currentReportPeriod = period;
+        document
+          .querySelectorAll('.period-tab')
+          .forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadReport();
+      };
+
+      // ── 리포트 데이터 로드 ────────────────────────
+      async function loadReport() {
+        const content = document.getElementById('report-content');
+        content.innerHTML = '<p class="loading-msg">불러오는 중...</p>';
+        const now = new Date();
+
+        let startThis,
+          endThis,
+          startLast,
+          endLast,
+          periodLabel,
+          lastPeriodLabel;
+
+        if (currentReportPeriod === 'month') {
+          startThis = new Date(now.getFullYear(), now.getMonth(), 1);
+          endThis = new Date(
+            now.getFullYear(),
+            now.getMonth() + 1,
+            0,
+            23,
+            59,
+            59
+          );
+          startLast = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          endLast = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+          periodLabel = now.getFullYear() + '년 ' + (now.getMonth() + 1) + '월';
+          lastPeriodLabel =
+            (now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()) +
+            '년 ' +
+            (now.getMonth() === 0 ? 12 : now.getMonth()) +
+            '월';
+        } else if (currentReportPeriod === 'lastmonth') {
+          startThis = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          endThis = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+          startLast = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+          endLast = new Date(
+            now.getFullYear(),
+            now.getMonth() - 1,
+            0,
+            23,
+            59,
+            59
+          );
+          periodLabel =
+            (now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()) +
+            '년 ' +
+            (now.getMonth() === 0 ? 12 : now.getMonth()) +
+            '월';
+          lastPeriodLabel =
+            (now.getMonth() <= 1 ? now.getFullYear() - 1 : now.getFullYear()) +
+            '년 ' +
+            (now.getMonth() <= 1
+              ? 12 + now.getMonth() - 1
+              : now.getMonth() - 1) +
+            '월';
+        } else {
+          startThis = new Date(now.getFullYear(), 0, 1);
+          endThis = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+          startLast = new Date(now.getFullYear() - 1, 0, 1);
+          endLast = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59);
+          periodLabel = now.getFullYear() + '년';
+          lastPeriodLabel = now.getFullYear() - 1 + '년';
+        }
+
+        try {
+          // 이번 기간 수업 수
+          const qThis = query(
+            collection(db, 'lesson_records'),
+            where('dateObj', '>=', startThis.toISOString()),
+            where('dateObj', '<=', endThis.toISOString())
+          );
+          const snapThis = await getDocs(qThis);
+          const lessonsThis = snapThis.docs.map((d) => d.data());
+          const totalThis = lessonsThis.length;
+
+          // 지난 기간 수업 수
+          const qLast = query(
+            collection(db, 'lesson_records'),
+            where('dateObj', '>=', startLast.toISOString()),
+            where('dateObj', '<=', endLast.toISOString())
+          );
+          const snapLast = await getDocs(qLast);
+          const totalLast = snapLast.docs.length;
+
+          const diff = totalThis - totalLast;
+          const diffText =
+            diff > 0
+              ? '▲ ' + diff + '회 증가'
+              : diff < 0
+              ? '▼ ' + Math.abs(diff) + '회 감소'
+              : '→ 동일';
+          const diffClass = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+          const diffPct =
+            totalLast > 0 ? Math.round((Math.abs(diff) / totalLast) * 100) : 0;
+
+          // 튜터별 수업 수
+          const tutorCounts = {};
+          TUTORS.forEach((t) => {
+            tutorCounts[t] = 0;
+          });
+          lessonsThis.forEach((l) => {
+            if (tutorCounts[l.tutor] !== undefined) tutorCounts[l.tutor]++;
+          });
+
+          // 회원별 수업 수 Top 5
+          const memberCounts = {};
+          lessonsThis.forEach((l) => {
+            memberCounts[l.member] = (memberCounts[l.member] || 0) + 1;
+          });
+          const topMembers = Object.entries(memberCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+          // 월별 수업 수 차트 데이터 (올해 기준)
+          const monthlyData = Array(12).fill(0);
+          if (currentReportPeriod === 'year') {
+            lessonsThis.forEach((l) => {
+              const m = new Date(l.dateObj).getMonth();
+              monthlyData[m]++;
+            });
+          }
+
+          // HTML 렌더링
+          let html = '';
+
+          // 핵심 지표
+          html += `
+        <div class="report-summary-grid">
+          <div class="report-summary-item">
+            <div class="report-summary-num">${totalThis}</div>
+            <div class="report-summary-label">${periodLabel} 수업 수</div>
+          </div>
+          <div class="report-summary-item">
+            <div class="report-summary-num">${totalLast}</div>
+            <div class="report-summary-label">${lastPeriodLabel} 수업 수</div>
+          </div>
+          <div class="report-summary-item">
+            <div class="report-summary-num report-change-badge ${diffClass}">${
+            diff > 0 ? '+' + diff : diff === 0 ? '±0' : diff
+          }</div>
+            <div class="report-summary-label">전기간 대비</div>
+            ${
+              totalLast > 0
+                ? `<div class="report-change-badge ${diffClass}">(${diffPct}%)</div>`
+                : ''
+            }
+          </div>
+        </div>`;
+
+          // 월별 차트 (연간일 때)
+          if (currentReportPeriod === 'year') {
+            html += `
+          <p class="report-section-title">📅 월별 수업 수</p>
+          <div class="lesson-chart-wrap"><canvas id="lessonChart"></canvas></div>`;
+          }
+
+          // 튜터별 수업 수
+          html += `<p class="report-section-title">👨‍🏫 튜터별 수업 수</p>`;
+          html += `<table class="growth-table" style="margin-bottom:16px">
+        <thead><tr><th>튜터</th><th>수업 수</th><th>비율</th></tr></thead><tbody>`;
+          TUTORS.forEach((tutor) => {
+            const cnt = tutorCounts[tutor] || 0;
+            const pct = totalThis > 0 ? Math.round((cnt / totalThis) * 100) : 0;
+            html += `<tr><td>${tutor}</td><td style="font-weight:bold;color:#2d6a4f">${cnt}회</td><td>${pct}%</td></tr>`;
+          });
+          html += `</tbody></table>`;
+
+          // 수업 많은 회원 Top 5
+          if (topMembers.length > 0) {
+            html += `<p class="report-section-title">🏆 수업 수 Top 5 회원</p>`;
+            html += `<table class="growth-table"><thead><tr><th>순위</th><th>회원</th><th>수업 수</th></tr></thead><tbody>`;
+            topMembers.forEach(([name, cnt], i) => {
+              html += `<tr><td>${
+                i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1 + '위'
+              }</td><td>${name}</td><td style="font-weight:bold;color:#2d6a4f">${cnt}회</td></tr>`;
+            });
+            html += `</tbody></table>`;
+          }
+
+          content.innerHTML = html;
+
+          // 월별 차트 렌더링
+          if (currentReportPeriod === 'year') {
+            if (lessonChart) lessonChart.destroy();
+            lessonChart = new Chart(document.getElementById('lessonChart'), {
+              type: 'bar',
+              data: {
+                labels: [
+                  '1월',
+                  '2월',
+                  '3월',
+                  '4월',
+                  '5월',
+                  '6월',
+                  '7월',
+                  '8월',
+                  '9월',
+                  '10월',
+                  '11월',
+                  '12월',
+                ],
+                datasets: [
+                  {
+                    label: '수업 수',
+                    data: monthlyData,
+                    backgroundColor: '#2d6a4f88',
+                    borderColor: '#2d6a4f',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                  y: { beginAtZero: true, grid: { color: '#f0f4f8' } },
+                  x: { grid: { display: false } },
+                },
+              },
+            });
+          }
+        } catch (e) {
+          content.innerHTML =
+            '<p class="empty-msg">데이터를 불러오는 중 오류가 발생했어요</p>';
+          console.error(e);
+        }
+      }
+
+      // ── 대시보드 (튜터별 회원 수) ─────────────────
       async function loadDashboard() {
         const content = document.getElementById('dashboard-content');
         content.innerHTML = '<p class="loading-msg">불러오는 중...</p>';
-
-        // 이번달 스냅샷 저장 (회원 추가/삭제 시 자동 저장되지만, 혹시 모를 경우 대비)
         await saveMemberSnapshot();
-
         const now = new Date();
         const thisYM =
           now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -1995,15 +2397,12 @@
           lastD.getFullYear() +
           '-' +
           String(lastD.getMonth() + 1).padStart(2, '0');
-
         let html = '';
         for (const tutor of TUTORS) {
           const myMembers = members[tutor] || [];
           const thisCount = myMembers.length;
           let lastCount = null;
-
           try {
-            // 지난달 스냅샷 조회
             const lastSnap = await getDoc(
               doc(db, 'member_snapshots', tutor + '_' + lastYM)
             );
@@ -2011,30 +2410,36 @@
           } catch (e) {
             console.error(e);
           }
-
-          // 전달 대비 계산
-          let changeClass = 'same',
-            changeText = '정보 없음',
-            diffNum = '?',
-            diffClass = 'same';
-          if (lastCount !== null) {
-            const diff = thisCount - lastCount;
-            diffNum = diff > 0 ? '+' + diff : diff === 0 ? '±0' : String(diff);
-            diffClass = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
-            changeClass = diffClass;
-            changeText =
-              diff > 0
-                ? '▲ ' + diff + '명 증가'
-                : diff < 0
-                ? '▼ ' + Math.abs(diff) + '명 감소'
-                : '→ 전달과 동일';
-          }
-
+          const diff = lastCount !== null ? thisCount - lastCount : null;
+          const diffNum =
+            diff !== null
+              ? diff > 0
+                ? '+' + diff
+                : diff === 0
+                ? '±0'
+                : String(diff)
+              : '-';
+          const diffClass =
+            diff === null
+              ? 'same'
+              : diff > 0
+              ? 'up'
+              : diff < 0
+              ? 'down'
+              : 'same';
+          const changeText =
+            diff === null
+              ? '정보 없음'
+              : diff > 0
+              ? '▲ ' + diff + '명 증가'
+              : diff < 0
+              ? '▼ ' + Math.abs(diff) + '명 감소'
+              : '→ 전달과 동일';
           html += `
         <div class="dash-tutor-card">
           <div class="dash-tutor-header">
             <span class="dash-tutor-name">${tutor} 튜터</span>
-            <span class="dash-change ${changeClass}">${changeText}</span>
+            <span class="dash-change ${diffClass}">${changeText}</span>
           </div>
           <div class="dash-count-wrap">
             <div class="dash-count-item">
@@ -2048,25 +2453,46 @@
               <div class="dash-count-label">지난달 회원 수</div>
             </div>
             <div class="dash-count-item">
-              <div class="dash-diff-num ${diffClass}">${
-            lastCount !== null ? diffNum : '-'
-          }</div>
+              <div class="dash-diff-num ${diffClass}">${diffNum}</div>
               <div class="dash-count-label">전달 대비</div>
             </div>
           </div>
-          <div class="dash-member-list">
-            ${
-              myMembers.length > 0
-                ? '👥 ' + myMembers.join(', ')
-                : '등록된 회원 없음'
-            }
-          </div>
+          <div class="dash-member-list">${
+            myMembers.length > 0
+              ? '👥 ' + myMembers.join(', ')
+              : '등록된 회원 없음'
+          }</div>
         </div>`;
         }
         content.innerHTML = html;
       }
 
-      // 앱 시작 시 이번달 스냅샷 초기화
+      async function loadDashboardAll() {
+        await Promise.all([loadReport(), loadDashboard()]);
+      }
+
+      // 대시보드 탭 진입 시 둘 다 로드
+      const origNavTo = window.navTo;
+      window.navTo = function (page) {
+        ['home', 'growth', 'dashboard', 'db'].forEach((p) =>
+          document.getElementById('nav-' + p)?.classList.remove('active')
+        );
+        document.getElementById('nav-' + page)?.classList.add('active');
+        if (page === 'home') showScreen('tutor');
+        if (page === 'db') {
+          renderDB();
+          showScreen('db');
+        }
+        if (page === 'growth') {
+          loadMemberOptions();
+          showScreen('growth');
+        }
+        if (page === 'dashboard') {
+          showScreen('dashboard');
+          loadDashboardAll();
+        }
+      };
+
       saveMemberSnapshot();
     </script>
   </body>
