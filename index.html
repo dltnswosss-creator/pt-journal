@@ -85,40 +85,17 @@
         </div>
         <div class="tab-panel active" id="panel-warmup">
           <span class="section-badge badge-warmup">🔥 Warm up</span>
-          <div class="col-headers">
-            <div class="col-label">운동 이름</div>
-            <div class="col-label">중량kg</div>
-            <div class="col-label">세트</div>
-            <div class="col-label">횟수/초</div>
-            <div></div>
-          </div>
           <div id="list-warmup"></div>
           <button class="add-exercise-btn" data-section="warmup">+ 운동 추가</button>
         </div>
         <div class="tab-panel" id="panel-main">
           <span class="section-badge badge-main">💪 Main workout</span>
-          <div class="col-headers">
-            <div class="col-label">운동 이름</div>
-            <div class="col-label">중량kg</div>
-            <div class="col-label">세트</div>
-            <div class="col-label">횟수/초</div>
-            <div></div>
-          </div>
           <div id="list-main"></div>
           <button class="add-exercise-btn" data-section="main">+ 운동 추가</button>
         </div>
         <div class="tab-panel" id="panel-cooldown">
           <span class="section-badge badge-cooldown">❄️ Cool down</span>
-          <p style="font-size: 12px; color: #aaa; margin-bottom: 12px">
-            입력하지 않으면 일지에서 자동으로 생략돼요
-          </p>
-          <div class="col-headers">
-            <div class="col-label">운동 이름</div>
-            <div class="col-label">중량kg</div>
-            <div class="col-label">세트</div>
-            <div class="col-label">횟수/초</div>
-            <div></div>
-          </div>
+          <p style="font-size:12px;color:#aaa;margin-bottom:12px">입력하지 않으면 일지에서 자동으로 생략돼요</p>
           <div id="list-cooldown"></div>
           <button class="add-exercise-btn" data-section="cooldown">+ 운동 추가</button>
         </div>
@@ -266,9 +243,24 @@
       <div class="modal">
         <h3 id="db-modal-title">운동 추가</h3>
         <div id="db-modal-name-wrap"></div>
-        <p style="font-size: 12px; color: #888; margin-bottom: 8px">운동 방법 / 코칭 포인트</p>
+        <p style="font-size:12px;color:#888;margin-bottom:8px">운동 방법 / 코칭 포인트</p>
         <textarea id="db-modal-method" placeholder="예) 발 어깨너비로 벌리기&#10;무릎이 발끝을 넘지 않도록"></textarea>
-        <div class="modal-btns">
+        <!-- DB 모달 미디어 섹션 -->
+        <div class="db-media-section">
+          <div class="db-media-label">📷 참고 이미지 첨부</div>
+          <div class="db-media-btns">
+            <label class="db-media-upload-btn">
+              📁 파일 업로드
+              <input type="file" id="db-modal-file-input" accept="image/*" multiple />
+            </label>
+          </div>
+          <div class="db-media-url-row">
+            <input class="db-media-url-input" id="db-modal-url-input" placeholder="이미지 URL 직접 입력 (http...)" />
+            <button class="db-media-add-url-btn" id="db-modal-add-url-btn">추가</button>
+          </div>
+          <div class="db-media-preview" id="db-modal-media-preview"></div>
+        </div>
+        <div class="modal-btns" style="margin-top:14px">
           <button class="modal-cancel-btn" id="db-modal-cancel-btn">취소</button>
           <button class="modal-save-btn" id="db-modal-save-btn">저장</button>
         </div>

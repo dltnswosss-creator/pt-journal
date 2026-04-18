@@ -34,6 +34,7 @@ let selDate = new Date(), calYear = new Date().getFullYear(), calMonth = new Dat
 let gwChart = null, grChart = null, lessonChart = null;
 let reportPeriod = 'month', loginTutor = '', dbEditName = null;
 let importParsed = [];
+let dbModalMediaList = [];
 
 // ── 이벤트 바인딩 ─────────────────────────────
 document.querySelectorAll('.login-tutor-btn').forEach((btn) => {
@@ -104,6 +105,42 @@ document.getElementById('import-reset-btn').addEventListener('click', () => {
   document.getElementById('import-parse-status').style.display = 'none';
   importParsed = [];
 });
+
+// DB 모달 미디어 이벤트
+document.getElementById('db-modal-file-input').addEventListener('change', function () {
+  Array.from(this.files).forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      dbModalMediaList.push({ type: 'file', src: e.target.result, file });
+      renderDbModalMedia();
+    };
+    reader.readAsDataURL(file);
+  });
+  this.value = '';
+});
+document.getElementById('db-modal-add-url-btn').addEventListener('click', () => {
+  const url = document.getElementById('db-modal-url-input').value.trim();
+  if (!url) return;
+  dbModalMediaList.push({ type: 'url', src: url });
+  document.getElementById('db-modal-url-input').value = '';
+  renderDbModalMedia();
+});
+
+function renderDbModalMedia() {
+  const preview = document.getElementById('db-modal-media-preview');
+  preview.innerHTML = '';
+  dbModalMediaList.forEach((m, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'db-media-thumb';
+    thumb.innerHTML = `<img src="${m.src}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect fill=%22%23eee%22 width=%2280%22 height=%2280%22/><text x=%2240%22 y=%2245%22 text-anchor=%22middle%22 fill=%22%23aaa%22 font-size=%2212%22>오류</text></svg>'" />
+                       <button class="db-media-thumb-del" data-idx="${i}">✕</button>`;
+    thumb.querySelector('.db-media-thumb-del').addEventListener('click', function () {
+      dbModalMediaList.splice(parseInt(this.dataset.idx), 1);
+      renderDbModalMedia();
+    });
+    preview.appendChild(thumb);
+  });
+}
 
 // ══════════════════════════════════════════════
 // ✅ 밴드 가져오기 파서
@@ -320,7 +357,7 @@ async function loadExerciseDB() {
     const snap = await getDocs(collection(db, 'exercise_db'));
     snap.docs.forEach((d) => {
       const x = d.data();
-      exerciseDB.push({ name: x.name, method: x.method || '', hasMethod: !!x.method });
+      exerciseDB.push({ name: x.name, method: x.method || '', hasMethod: !!x.method, images: x.images || [] });
     });
     exerciseDB.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
   } catch (e) { console.error(e); }
@@ -331,8 +368,8 @@ async function autoAddToExerciseDB(names) {
   const newNames = [...new Set(names.map((n) => n.trim()).filter((n) => n && !exist.includes(n.toLowerCase())))];
   for (const name of newNames) {
     try {
-      await setDoc(doc(db, 'exercise_db', name), { name, method: '', hasMethod: false, createdAt: new Date().toISOString() });
-      exerciseDB.push({ name, method: '', hasMethod: false });
+      await setDoc(doc(db, 'exercise_db', name), { name, method: '', hasMethod: false, images: [], createdAt: new Date().toISOString() });
+      exerciseDB.push({ name, method: '', hasMethod: false, images: [] });
     } catch (e) {}
   }
   if (newNames.length > 0) exerciseDB.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
@@ -461,7 +498,7 @@ function showAC(input, val) {
       const block = input.closest('.exercise-block');
       showMethodHint(block, ex.name);
       showLastHint(block, ex.name, '');
-      block.querySelector('input[data-role="weight"]')?.focus();
+      block.querySelector('input[data-role="weight-main"]')?.focus();
     });
     acList.appendChild(item);
   });
@@ -504,11 +541,13 @@ function applyLast(btn, name) {
   const last = lastCache[name];
   if (!last) return;
   const block = btn.closest('.exercise-block');
-  block.querySelector('input[data-role="weight"]').value = last.weight || '';
+  const mainW = block.querySelector('input[data-role="weight-main"]');
+  if (mainW) mainW.value = last.weight || '';
   block.querySelector('input[data-role="sets"]').value = last.sets || '';
   block.querySelector('input[data-role="reps"]').value = last.reps || '';
   const ub = block.querySelector('.unit-toggle');
   if (ub) ub.textContent = last.unit || '회';
+  updatePerSetWeights(block);
   showLastHint(block, name, last.weight || '');
 }
 
@@ -524,8 +563,11 @@ function showMethodHint(block, name) {
 
 function useMethodHint(btn) {
   const method = btn.closest('.method-hint').querySelector('.method-hint-text').textContent;
-  const cur = document.getElementById('feedback-msg').value.trim();
-  document.getElementById('feedback-msg').value = cur ? cur + '\n' + method : method;
+  const block = btn.closest('.exercise-block');
+  const memo = block.querySelector('.exercise-memo');
+  if (memo) {
+    memo.value = memo.value ? memo.value + '\n' + method : method;
+  }
   btn.closest('.method-hint').classList.remove('show');
 }
 
@@ -784,22 +826,42 @@ function switchTab(name) {
 }
 
 // ══════════════════════════════════════════════
+// 세트별 중량 입력칸
+// ══════════════════════════════════════════════
+function updatePerSetWeights(block) {
+  const setsInput = block.querySelector('input[data-role="sets"]');
+  const perSetSection = block.querySelector('.per-set-weights');
+  const perSetGrid = block.querySelector('.per-set-weights-grid');
+  const mainWeightInput = block.querySelector('input[data-role="weight-main"]');
+  if (!setsInput || !perSetSection || !perSetGrid) return;
+  const n = parseInt(setsInput.value) || 0;
+  const mainW = mainWeightInput ? mainWeightInput.value : '';
+  if (n > 1 && n <= 5) {
+    perSetGrid.innerHTML = '';
+    for (let i = 1; i <= n; i++) {
+      const item = document.createElement('div');
+      item.className = 'set-weight-item';
+      item.innerHTML = '<label>' + i + '세트</label><input type="number" data-role="set-weight" data-set="' + i + '" placeholder="kg" min="0" value="' + mainW + '" />';
+      perSetGrid.appendChild(item);
+    }
+    perSetSection.classList.add('show');
+  } else {
+    perSetSection.classList.remove('show');
+    perSetGrid.innerHTML = '';
+  }
+}
+
+// ══════════════════════════════════════════════
 // 운동 입력 행
 // ══════════════════════════════════════════════
 function addRow(section, name = '', weight = '', sets = '', reps = '', unit = '회', memo = '') {
   const block = document.createElement('div');
   block.className = 'exercise-block';
   block.innerHTML = `
-    <div class="exercise-inputs">
+    <div class="exercise-name-row">
       <div class="name-wrap">
         <input type="text" placeholder="예) 스쿼트" value="${name}" />
         <div class="autocomplete-list"></div>
-      </div>
-      <input type="number" data-role="weight" placeholder="60" min="0" value="${weight}" style="text-align:center;" />
-      <input type="number" data-role="sets" placeholder="3" min="1" value="${sets}" style="text-align:center;" />
-      <div class="reps-cell">
-        <input type="number" data-role="reps" placeholder="10" min="1" value="${reps}" />
-        <button class="unit-toggle">${unit}</button>
       </div>
       <button class="delete-btn">✕</button>
     </div>
@@ -807,25 +869,147 @@ function addRow(section, name = '', weight = '', sets = '', reps = '', unit = '�
     <div class="method-hint">
       <div class="method-hint-header">
         <span class="method-hint-title">📌 저장된 운동 방법</span>
-        <button class="method-hint-use">피드백에 추가</button>
+        <button class="method-hint-use">메모에 추가 ↓</button>
       </div>
       <div class="method-hint-text"></div>
     </div>
+
+    <div class="sets-weight-section">
+      <div class="sets-header">
+        <span>중량(kg)</span>
+        <span>세트</span>
+        <span>횟수/초</span>
+      </div>
+      <div class="sets-info-row">
+        <input type="number" data-role="weight-main" placeholder="60" min="0" value="${weight}" />
+        <input type="number" data-role="sets" placeholder="3" min="1" max="5" value="${sets}" />
+        <div class="reps-cell">
+          <input type="number" data-role="reps" placeholder="10" min="1" value="${reps}" />
+          <button class="unit-toggle">${unit}</button>
+        </div>
+      </div>
+      <div class="per-set-weights">
+        <div class="per-set-weights-label">📊 세트별 중량 입력 (각각 다를 때)</div>
+        <div class="per-set-weights-grid"></div>
+      </div>
+    </div>
+
     <div class="memo-row">
-      <textarea class="exercise-memo" placeholder="이 운동 메모 (🎤 음성 또는 직접 입력)">${memo}</textarea>
+      <textarea class="exercise-memo" placeholder="운동 메모 (코칭 포인트, 느낌 등 / 🎤 음성 입력 가능)">${memo}</textarea>
       <button class="memo-mic-btn">🎤</button>
+    </div>
+
+    <div class="media-attach-section">
+      <div class="media-attach-toggle">📎 사진/영상 첨부 <span style="font-size:10px;color:#aaa;margin-left:4px">(선택)</span></div>
+      <div class="media-attach-body">
+        <div class="media-tabs">
+          <button class="media-tab active" data-mtab="upload">📁 파일 업로드</button>
+          <button class="media-tab" data-mtab="url">🔗 URL 링크</button>
+          <button class="media-tab" data-mtab="google">🔍 구글 검색</button>
+        </div>
+        <div class="media-panel active" data-mpanel="upload">
+          <label class="media-upload-area">
+            <div class="media-upload-icon">📷</div>
+            <div class="media-upload-label">여기를 탭해서 사진/영상 선택</div>
+            <input type="file" accept="image/*,video/*" multiple />
+          </label>
+          <div class="media-hint">사진: JPG, PNG / 영상: MP4 지원</div>
+        </div>
+        <div class="media-panel" data-mpanel="url">
+          <div class="media-url-row">
+            <input class="media-url-input" placeholder="이미지/영상 URL 붙여넣기 (http...)" />
+            <button class="media-url-add-btn">추가</button>
+          </div>
+          <div class="media-hint">유튜브 링크, 구글 이미지 주소 등 직접 붙여넣기</div>
+        </div>
+        <div class="media-panel" data-mpanel="google">
+          <div class="google-search-row">
+            <input class="google-search-input" placeholder="운동 이름으로 구글 검색..." />
+            <button class="google-search-btn">🔍 검색</button>
+          </div>
+          <div class="google-hint">버튼을 누르면 구글 이미지 검색 페이지가 새 탭으로 열려요.<br>원하는 이미지 주소를 복사한 뒤 'URL 링크' 탭에 붙여넣으세요.</div>
+        </div>
+        <div class="media-preview-grid"></div>
+      </div>
     </div>`;
+
   const nameInput = block.querySelector('.name-wrap input');
   nameInput.addEventListener('input', function () { onNameInput(this); });
   nameInput.addEventListener('focus', function () { onNameInput(this); });
   nameInput.addEventListener('keydown', function (e) { onNameKey(e, this); });
-  block.querySelector('input[data-role="weight"]').addEventListener('input', function () { onWeightInput(this); });
+
+  block.querySelector('input[data-role="weight-main"]').addEventListener('input', function () { onWeightInput(this); });
+
+  block.querySelector('input[data-role="sets"]').addEventListener('input', function () { updatePerSetWeights(block); });
+  block.querySelector('input[data-role="sets"]').addEventListener('change', function () { updatePerSetWeights(block); });
+
   block.querySelector('.unit-toggle').addEventListener('click', function () { toggleUnit(this); });
   block.querySelector('.delete-btn').addEventListener('click', function () { this.closest('.exercise-block').remove(); });
   block.querySelector('.method-hint-use').addEventListener('click', function () { useMethodHint(this); });
   block.querySelector('.memo-mic-btn').addEventListener('click', function () { toggleMemoVoice(this); });
+
+  block.querySelector('.media-attach-toggle').addEventListener('click', function () {
+    const body = block.querySelector('.media-attach-body');
+    body.classList.toggle('open');
+    this.textContent = body.classList.contains('open') ? '📎 사진/영상 첨부 ▲' : '📎 사진/영상 첨부 ▼';
+    if (body.classList.contains('open')) {
+      const exName = block.querySelector('.name-wrap input').value.trim();
+      if (exName) block.querySelector('.google-search-input').value = exName + ' 운동 방법';
+    }
+  });
+
+  block.querySelectorAll('.media-tab').forEach((tab) => {
+    tab.addEventListener('click', function () {
+      const target = this.dataset.mtab;
+      block.querySelectorAll('.media-tab').forEach((t) => t.classList.remove('active'));
+      block.querySelectorAll('.media-panel').forEach((p) => p.classList.remove('active'));
+      this.classList.add('active');
+      block.querySelector('[data-mpanel="' + target + '"]').classList.add('active');
+    });
+  });
+
+  block.querySelector('[data-mpanel="upload"] input[type="file"]').addEventListener('change', function () {
+    Array.from(this.files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => addMediaThumb(block, e.target.result, file.type.startsWith('video') ? 'video' : 'image');
+      reader.readAsDataURL(file);
+    });
+    this.value = '';
+  });
+
+  block.querySelector('.media-url-add-btn').addEventListener('click', function () {
+    const urlInput = block.querySelector('.media-url-input');
+    const url = urlInput.value.trim();
+    if (!url) return;
+    addMediaThumb(block, url, 'image');
+    urlInput.value = '';
+  });
+
+  block.querySelector('.google-search-btn').addEventListener('click', function () {
+    const q = block.querySelector('.google-search-input').value.trim();
+    const query = q || (block.querySelector('.name-wrap input').value.trim() + ' 운동');
+    window.open('https://www.google.com/search?q=' + encodeURIComponent(query) + '&tbm=isch', '_blank');
+  });
+  block.querySelector('.google-search-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') block.querySelector('.google-search-btn').click();
+  });
+
   document.getElementById('list-' + section).appendChild(block);
   if (name) { showMethodHint(block, name); showLastHint(block, name, weight); }
+  if (sets) updatePerSetWeights(block);
+}
+
+function addMediaThumb(block, src, type) {
+  const grid = block.querySelector('.media-preview-grid');
+  const thumb = document.createElement('div');
+  thumb.className = 'media-thumb';
+  if (type === 'video') {
+    thumb.innerHTML = '<video src="' + src + '" muted playsinline></video><button class="media-thumb-del">✕</button>';
+  } else {
+    thumb.innerHTML = '<img src="' + src + '" onerror="this.parentElement.remove()" /><button class="media-thumb-del">✕</button>';
+  }
+  thumb.querySelector('.media-thumb-del').addEventListener('click', function () { thumb.remove(); });
+  grid.appendChild(thumb);
 }
 
 function onNameInput(input) {
@@ -833,7 +1017,9 @@ function onNameInput(input) {
   const block = input.closest('.exercise-block');
   showMethodHint(block, input.value.trim());
   if (input.value.trim())
-    showLastHint(block, input.value.trim(), block.querySelector('input[data-role="weight"]')?.value || '');
+    showLastHint(block, input.value.trim(), block.querySelector('input[data-role="weight-main"]')?.value || '');
+  const googleInput = block.querySelector('.google-search-input');
+  if (googleInput && input.value.trim()) googleInput.value = input.value.trim() + ' 운동 방법';
 }
 
 function onNameKey(e, input) {
@@ -857,6 +1043,9 @@ function onWeightInput(input) {
   const block = input.closest('.exercise-block');
   const name = block.querySelector('.name-wrap input')?.value.trim();
   if (name) showLastHint(block, name, input.value);
+  block.querySelectorAll('input[data-role="set-weight"]').forEach((sw) => {
+    if (!sw.value) sw.value = input.value;
+  });
 }
 
 function toggleUnit(btn) {
@@ -1001,13 +1190,14 @@ function parseVoice(text) {
     const lastNameInput = last?.querySelector('.name-wrap input');
     if (lastNameInput && !lastNameInput.value.trim()) {
       lastNameInput.value = exName;
-      last.querySelector('input[data-role="weight"]').value = weight;
+      last.querySelector('input[data-role="weight-main"]').value = weight;
       last.querySelector('input[data-role="sets"]').value = sets;
       last.querySelector('input[data-role="reps"]').value = reps;
       const ub = last.querySelector('.unit-toggle');
       if (ub) ub.textContent = unit;
       showMethodHint(last, exName);
       if (exName) showLastHint(last, exName, weight);
+      if (sets) updatePerSetWeights(last);
     } else {
       addRow(currentTab, exName, weight, sets, reps, unit);
     }
@@ -1023,12 +1213,14 @@ function getExercises(section) {
   const list = [];
   blocks.forEach((block) => {
     const name = block.querySelector('.name-wrap input')?.value.trim() || '';
-    const weight = block.querySelector('input[data-role="weight"]')?.value.trim() || '';
+    const weight = block.querySelector('input[data-role="weight-main"]')?.value.trim() || '';
     const sets = block.querySelector('input[data-role="sets"]')?.value.trim() || '';
     const reps = block.querySelector('input[data-role="reps"]')?.value.trim() || '';
     const unit = block.querySelector('.unit-toggle')?.textContent.trim() || '회';
     const memo = block.querySelector('.exercise-memo')?.value.trim() || '';
-    if (name) list.push({ name, weight, sets, reps, unit, memo });
+    const setWeights = [];
+    block.querySelectorAll('input[data-role="set-weight"]').forEach((sw) => { setWeights.push(Number(sw.value) || 0); });
+    if (name) list.push({ name, weight, sets, reps, unit, memo, setWeights });
   });
   return list;
 }
@@ -1036,7 +1228,16 @@ function getExercises(section) {
 function fmtExercises(list) {
   return list.map((ex, i) => {
     let line = i + 1 + '. ' + ex.name;
-    if (ex.weight && Number(ex.weight) !== 0) line += '  ' + ex.weight + 'kg';
+    if (ex.setWeights && ex.setWeights.length > 0 && ex.setWeights.some((w) => w > 0)) {
+      const allSame = ex.setWeights.every((w) => w === ex.setWeights[0]);
+      if (!allSame) {
+        line += '  ' + ex.setWeights.map((w, j) => (j + 1) + '세트:' + w + 'kg').join(' / ');
+      } else {
+        if (ex.weight && Number(ex.weight) !== 0) line += '  ' + ex.weight + 'kg';
+      }
+    } else {
+      if (ex.weight && Number(ex.weight) !== 0) line += '  ' + ex.weight + 'kg';
+    }
     if (ex.sets && Number(ex.sets) !== 0) line += ' / ' + ex.sets + '세트';
     if (ex.reps && Number(ex.reps) !== 0) line += ' / ' + ex.reps + ex.unit;
     if (ex.memo) line += '\n   💬 ' + ex.memo;
@@ -1064,7 +1265,7 @@ async function saveRecord() {
         member: currentMember, tutor: loggedInTutor, date: currentDateStr,
         dateObj: selDate.toISOString(), exerciseName: ex.name,
         weight: Number(ex.weight) || 0, sets: Number(ex.sets) || 0,
-        reps: Number(ex.reps) || 0, unit: ex.unit, memo: ex.memo || '', createdAt: new Date(),
+        reps: Number(ex.reps) || 0, unit: ex.unit, memo: ex.memo || '', setWeights: ex.setWeights || [], createdAt: new Date(),
       });
     }
     await setDoc(doc(db, 'lesson_records', jid), {
@@ -1142,15 +1343,23 @@ function renderDB() {
   filtered.forEach((ex) => {
     const item = document.createElement('div');
     item.className = 'db-item';
+    const imgHtml = (ex.images && ex.images.length > 0)
+      ? '<div class="db-item-image"><img src="' + ex.images[0] + '" alt="참고 이미지" /><div class="db-item-image-hint">총 ' + ex.images.length + '개 이미지</div></div>'
+      : '';
     item.innerHTML =
       '<div class="db-item-header">' +
       '<span class="db-item-name">' + ex.name + (!ex.hasMethod ? '<span class="db-new-badge">방법 미등록</span>' : '') + '</span>' +
       '<div class="db-item-btns">' +
       '<button class="db-edit-btn">✏️ ' + (ex.hasMethod ? '수정' : '등록') + '</button>' +
+      '<button class="db-google-btn">🔍 구글</button>' +
       '<button class="db-del-btn">삭제</button>' +
       '</div></div>' +
-      (ex.method ? '<div class="db-item-method">' + ex.method + '</div>' : '<div class="db-item-no-method">운동 방법이 아직 등록되지 않았어요</div>');
+      (ex.method ? '<div class="db-item-method">' + ex.method + '</div>' : '<div class="db-item-no-method">운동 방법이 아직 등록되지 않았어요</div>') +
+      imgHtml;
     item.querySelector('.db-edit-btn').addEventListener('click', () => openDbModal(ex.name));
+    item.querySelector('.db-google-btn').addEventListener('click', () => {
+      window.open('https://www.google.com/search?q=' + encodeURIComponent(ex.name + ' 운동 방법') + '&tbm=isch', '_blank');
+    });
     item.querySelector('.db-del-btn').addEventListener('click', () => deleteFromDB(ex.name));
     list.appendChild(item);
   });
@@ -1158,6 +1367,7 @@ function renderDB() {
 
 function openDbModal(name = null) {
   dbEditName = name;
+  dbModalMediaList = [];
   const titleEl = document.getElementById('db-modal-title');
   const nameWrap = document.getElementById('db-modal-name-wrap');
   const methodEl = document.getElementById('db-modal-method');
@@ -1166,26 +1376,33 @@ function openDbModal(name = null) {
     titleEl.textContent = '운동 방법 ' + (found?.hasMethod ? '수정' : '등록');
     nameWrap.innerHTML = '<div class="modal-name-readonly">🏋️ ' + name + '</div>';
     methodEl.value = found?.method || '';
+    if (found?.images?.length) {
+      found.images.forEach((src) => { dbModalMediaList.push({ type: 'url', src }); });
+    }
   } else {
     titleEl.textContent = '운동 직접 추가';
     nameWrap.innerHTML = '<input type="text" id="db-modal-new-name" placeholder="운동 이름 입력 (예: 바벨 백 스쿼트)" />';
     methodEl.value = '';
   }
+  renderDbModalMedia();
   document.getElementById('db-modal-overlay').classList.add('open');
   setTimeout(() => { if (!name) document.getElementById('db-modal-new-name')?.focus(); else methodEl.focus(); }, 100);
 }
 
 function closeDbModal() {
   document.getElementById('db-modal-overlay').classList.remove('open');
+  dbModalMediaList = [];
+  renderDbModalMedia();
 }
 
 async function saveDbModal() {
   const method = document.getElementById('db-modal-method').value.trim();
+  const imageUrls = dbModalMediaList.map((m) => m.src).filter(Boolean);
   if (dbEditName) {
     try {
-      await setDoc(doc(db, 'exercise_db', dbEditName), { name: dbEditName, method, hasMethod: method.length > 0, updatedAt: new Date().toISOString() });
+      await setDoc(doc(db, 'exercise_db', dbEditName), { name: dbEditName, method, hasMethod: method.length > 0, images: imageUrls, updatedAt: new Date().toISOString() });
       const i = exerciseDB.findIndex((e) => e.name === dbEditName);
-      if (i !== -1) { exerciseDB[i].method = method; exerciseDB[i].hasMethod = method.length > 0; }
+      if (i !== -1) { exerciseDB[i].method = method; exerciseDB[i].hasMethod = method.length > 0; exerciseDB[i].images = imageUrls; }
       closeDbModal();
       renderDB();
     } catch (e) { alert('저장 중 오류가 발생했어요.'); }
@@ -1195,8 +1412,8 @@ async function saveDbModal() {
     if (!name) { alert('운동 이름을 입력해주세요!'); return; }
     if (exerciseDB.find((e) => e.name.toLowerCase() === name.toLowerCase())) { alert('이미 등록된 운동 이름이에요!'); return; }
     try {
-      await setDoc(doc(db, 'exercise_db', name), { name, method, hasMethod: method.length > 0, createdAt: new Date().toISOString() });
-      exerciseDB.push({ name, method, hasMethod: method.length > 0 });
+      await setDoc(doc(db, 'exercise_db', name), { name, method, hasMethod: method.length > 0, images: imageUrls, createdAt: new Date().toISOString() });
+      exerciseDB.push({ name, method, hasMethod: method.length > 0, images: imageUrls });
       exerciseDB.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
       closeDbModal();
       renderDB();
