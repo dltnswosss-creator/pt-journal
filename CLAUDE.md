@@ -17,3 +17,25 @@
 
 - 네이버 밴드 복사용 출력 형식을 항상 유지할 것
 - 튜터별 로그인 구조를 고려할 것
+
+## 파일 구조 규칙 (MUST FOLLOW)
+
+**절대로 하나의 파일에 모든 코드를 몰아넣지 말 것.** 기능별로 파일을 분리한다.
+
+### 기본 원칙
+
+- `index.html`: HTML 마크업만. 인라인 `<script>`, `<style>` 블록 금지.
+- CSS는 관심사별로 파일 분리 (예: `styles.css`, `components.css`, `modal.css`)
+- JS는 기능별로 파일 분리 (예: `auth.js`, `journal.js`, `export.js`, `ui.js`)
+
+### 새 기능 추가 시
+
+- 기존 파일에 무작정 붙이지 말고, 해당 기능이 독립적인 모듈인지 판단할 것
+- 파일이 300줄을 넘으면 분리를 검토할 것
+- 새 파일을 만들 때 `index.html`에 `<script src="...">` / `<link rel="stylesheet" href="...">` 추가
+
+### 금지 사항
+
+- `index.html` 안에 `<script>` 또는 `<style>` 블록 추가
+- 관련 없는 기능을 하나의 js/css 파일에 혼재
+- 기존 파일이 크다는 이유로 그냥 거기에 이어붙이기

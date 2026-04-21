@@ -833,15 +833,26 @@ function updatePerSetWeights(block) {
   const perSetSection = block.querySelector('.per-set-weights');
   const perSetGrid = block.querySelector('.per-set-weights-grid');
   const mainWeightInput = block.querySelector('input[data-role="weight-main"]');
+  const mainRepsInput = block.querySelector('input[data-role="reps"]');
+  const unitToggle = block.querySelector('.unit-toggle');
   if (!setsInput || !perSetSection || !perSetGrid) return;
   const n = parseInt(setsInput.value) || 0;
   const mainW = mainWeightInput ? mainWeightInput.value : '';
-  if (n > 1 && n <= 5) {
+  const mainR = mainRepsInput ? mainRepsInput.value : '';
+  const unit = unitToggle ? unitToggle.textContent.trim() : '회';
+  if (n >= 1) {
+    const prevW = Array.from(perSetGrid.querySelectorAll('input[data-role="set-weight"]')).map((el) => el.value);
+    const prevR = Array.from(perSetGrid.querySelectorAll('input[data-role="set-reps"]')).map((el) => el.value);
     perSetGrid.innerHTML = '';
     for (let i = 1; i <= n; i++) {
       const item = document.createElement('div');
       item.className = 'set-weight-item';
-      item.innerHTML = '<label>' + i + '세트</label><input type="number" data-role="set-weight" data-set="' + i + '" placeholder="kg" min="0" value="' + mainW + '" />';
+      const wVal = prevW[i - 1] !== undefined && prevW[i - 1] !== '' ? prevW[i - 1] : mainW;
+      const rVal = prevR[i - 1] !== undefined && prevR[i - 1] !== '' ? prevR[i - 1] : mainR;
+      item.innerHTML =
+        '<label>' + i + '세트</label>' +
+        '<input type="number" data-role="set-weight" data-set="' + i + '" placeholder="kg" min="0" value="' + wVal + '" />' +
+        '<input type="number" data-role="set-reps" data-set="' + i + '" placeholder="' + unit + '" min="0" value="' + rVal + '" />';
       perSetGrid.appendChild(item);
     }
     perSetSection.classList.add('show');
@@ -882,14 +893,14 @@ function addRow(section, name = '', weight = '', sets = '', reps = '', unit = '�
       </div>
       <div class="sets-info-row">
         <input type="number" data-role="weight-main" placeholder="60" min="0" value="${weight}" />
-        <input type="number" data-role="sets" placeholder="3" min="1" max="5" value="${sets}" />
+        <input type="number" data-role="sets" placeholder="3" min="1" value="${sets}" />
         <div class="reps-cell">
           <input type="number" data-role="reps" placeholder="10" min="1" value="${reps}" />
           <button class="unit-toggle">${unit}</button>
         </div>
       </div>
       <div class="per-set-weights">
-        <div class="per-set-weights-label">📊 세트별 중량 입력 (각각 다를 때)</div>
+        <div class="per-set-weights-label">📊 세트별 중량 / 횟수</div>
         <div class="per-set-weights-grid"></div>
       </div>
     </div>
@@ -1219,8 +1230,10 @@ function getExercises(section) {
     const unit = block.querySelector('.unit-toggle')?.textContent.trim() || '회';
     const memo = block.querySelector('.exercise-memo')?.value.trim() || '';
     const setWeights = [];
+    const setReps = [];
     block.querySelectorAll('input[data-role="set-weight"]').forEach((sw) => { setWeights.push(Number(sw.value) || 0); });
-    if (name) list.push({ name, weight, sets, reps, unit, memo, setWeights });
+    block.querySelectorAll('input[data-role="set-reps"]').forEach((sr) => { setReps.push(Number(sr.value) || 0); });
+    if (name) list.push({ name, weight, sets, reps, unit, memo, setWeights, setReps });
   });
   return list;
 }
@@ -1228,18 +1241,22 @@ function getExercises(section) {
 function fmtExercises(list) {
   return list.map((ex, i) => {
     let line = i + 1 + '. ' + ex.name;
-    if (ex.setWeights && ex.setWeights.length > 0 && ex.setWeights.some((w) => w > 0)) {
-      const allSame = ex.setWeights.every((w) => w === ex.setWeights[0]);
-      if (!allSame) {
-        line += '  ' + ex.setWeights.map((w, j) => (j + 1) + '세트:' + w + 'kg').join(' / ');
-      } else {
-        if (ex.weight && Number(ex.weight) !== 0) line += '  ' + ex.weight + 'kg';
+    const hasSetWeights = ex.setWeights && ex.setWeights.length > 0 && ex.setWeights.some((w) => w > 0);
+    const hasSetReps = ex.setReps && ex.setReps.length > 0 && ex.setReps.some((r) => r > 0);
+    if (hasSetWeights || hasSetReps) {
+      const count = Math.max((ex.setWeights || []).length, (ex.setReps || []).length);
+      const parts = [];
+      for (let j = 0; j < count; j++) {
+        const w = ex.setWeights && ex.setWeights[j] ? ex.setWeights[j] + 'kg' : '';
+        const r = ex.setReps && ex.setReps[j] ? ex.setReps[j] + ex.unit : '';
+        parts.push((j + 1) + '세트: ' + [w, r].filter(Boolean).join(' '));
       }
+      line += '\n   ' + parts.join(' / ');
     } else {
       if (ex.weight && Number(ex.weight) !== 0) line += '  ' + ex.weight + 'kg';
+      if (ex.sets && Number(ex.sets) !== 0) line += ' / ' + ex.sets + '세트';
+      if (ex.reps && Number(ex.reps) !== 0) line += ' / ' + ex.reps + ex.unit;
     }
-    if (ex.sets && Number(ex.sets) !== 0) line += ' / ' + ex.sets + '세트';
-    if (ex.reps && Number(ex.reps) !== 0) line += ' / ' + ex.reps + ex.unit;
     if (ex.memo) line += '\n   💬 ' + ex.memo;
     return line;
   }).join('\n');
@@ -1265,7 +1282,7 @@ async function saveRecord() {
         member: currentMember, tutor: loggedInTutor, date: currentDateStr,
         dateObj: selDate.toISOString(), exerciseName: ex.name,
         weight: Number(ex.weight) || 0, sets: Number(ex.sets) || 0,
-        reps: Number(ex.reps) || 0, unit: ex.unit, memo: ex.memo || '', setWeights: ex.setWeights || [], createdAt: new Date(),
+        reps: Number(ex.reps) || 0, unit: ex.unit, memo: ex.memo || '', setWeights: ex.setWeights || [], setReps: ex.setReps || [], createdAt: new Date(),
       });
     }
     await setDoc(doc(db, 'lesson_records', jid), {
